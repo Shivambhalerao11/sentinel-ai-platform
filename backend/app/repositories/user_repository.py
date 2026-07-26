@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.models.enums import AccountStatus, UserRole
 from app.models.user import (
     CitizenProfile, EmailVerificationToken, PasswordResetToken,
-    PoliceProfile, RefreshToken, User
+    PoliceProfile, RefreshToken, User, EmailOTP
 )
 from app.core.logging import get_logger
 
@@ -367,3 +367,48 @@ class UserRepository:
             .first()
             is not None
         )
+
+    # ─── Email OTP Operations ──────────────────────────────────────────────────
+    def store_email_otp(
+        self,
+        email: str,
+        otp_code: str,
+        purpose: str,
+        expires_at: datetime,
+        ip_address: Optional[str] = None,
+    ) -> EmailOTP:
+        # Invalidate previous unverified OTPs for this email & purpose
+        self.db.query(EmailOTP).filter(
+            EmailOTP.email == email.lower().strip(),
+            EmailOTP.purpose == purpose,
+            EmailOTP.is_verified == False,
+        ).update({"is_used": True}, synchronize_session=False)
+
+        otp_record = EmailOTP(
+            email=email.lower().strip(),
+            otp_hash=_hash_token(otp_code),
+            purpose=purpose,
+            expires_at=expires_at,
+            ip_address=ip_address,
+        )
+        self.db.add(otp_record)
+        self.db.flush()
+        return otp_record
+
+    def get_latest_email_otp(self, email: str, purpose: str) -> Optional[EmailOTP]:
+        return (
+            self.db.query(EmailOTP)
+            .filter(
+                EmailOTP.email == email.lower().strip(),
+                EmailOTP.purpose == purpose,
+                EmailOTP.is_used == False,
+            )
+            .order_by(EmailOTP.created_at.desc())
+            .first()
+        )
+
+    def mark_otp_verified(self, otp_record: EmailOTP) -> None:
+        otp_record.is_verified = True
+        otp_record.verified_at = datetime.now(timezone.utc)
+        self.db.flush()
+

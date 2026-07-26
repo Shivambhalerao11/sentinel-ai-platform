@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: sentinel-backend
+    env: docker
+    dockerfilePath: Dockerfile
+    dockerContext: .
+    region: singapore
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_ORIGINS
+        value: '["https://sentinel-ai-platform.vercel.app","http://localhost:5173"]'

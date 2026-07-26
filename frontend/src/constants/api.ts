@@ -10,7 +10,9 @@
  */
 
 export const API_BASE_URL: string =
-  (import.meta as any).env?.VITE_API_BASE_URL || "http://127.0.0.1:8000/api/v1";
+  (import.meta as any).env?.VITE_API_URL ||
+  (import.meta as any).env?.VITE_API_BASE_URL ||
+  "/api/v1";
 
 export const API_ENDPOINTS = {
   // ==========================
@@ -22,6 +24,11 @@ export const API_ENDPOINTS = {
   CITIZEN_LOGIN: `${API_BASE_URL}/auth/login/citizen`,
   POLICE_LOGIN: `${API_BASE_URL}/auth/login/police`,
   CITIZEN_REGISTER: `${API_BASE_URL}/auth/register/citizen`,
+  POLICE_REGISTER: `${API_BASE_URL}/auth/register/police`,
+
+  SEND_OTP: `${API_BASE_URL}/auth/otp/send`,
+  VERIFY_OTP: `${API_BASE_URL}/auth/otp/verify`,
+  RESET_PASSWORD_OTP: `${API_BASE_URL}/auth/password/reset/otp`,
 
   REFRESH: `${API_BASE_URL}/auth/refresh`,
   ME: `${API_BASE_URL}/auth/me`,

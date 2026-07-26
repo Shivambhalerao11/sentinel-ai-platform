@@ -174,6 +174,42 @@ class VerifyPhoneOTPRequest(BaseModel):
     otp: str = Field(..., min_length=6, max_length=6)
 
 
+class SendEmailOtpRequest(BaseModel):
+    """Request a 6-digit Email OTP for registration or password reset."""
+    email: EmailStr
+    purpose: str = Field(default="REGISTRATION", pattern="^(REGISTRATION|PASSWORD_RESET)$")
+
+
+class VerifyEmailOtpRequest(BaseModel):
+    """Verify 6-digit Email OTP."""
+    email: EmailStr
+    otp_code: str = Field(..., min_length=6, max_length=6, description="6-digit OTP code")
+    purpose: str = Field(default="REGISTRATION", pattern="^(REGISTRATION|PASSWORD_RESET)$")
+
+
+class ResetPasswordWithOtpRequest(BaseModel):
+    """Reset password after OTP verification."""
+    email: EmailStr
+    otp_code: str = Field(..., min_length=6, max_length=6)
+    new_password: str = Field(..., min_length=8, max_length=128)
+    confirm_password: str = Field(..., min_length=8, max_length=128)
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        if not re.search(r"[A-Z]", v):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not re.search(r"\d", v):
+            raise ValueError("Password must contain at least one digit")
+        return v
+
+    @model_validator(mode="after")
+    def passwords_must_match(self) -> "ResetPasswordWithOtpRequest":
+        if self.new_password != self.confirm_password:
+            raise ValueError("Passwords do not match")
+        return self
+
+
 # ─── Response Schemas ─────────────────────────────────────────────────────────
 class TokenPair(BaseModel):
     """Access + Refresh token pair."""

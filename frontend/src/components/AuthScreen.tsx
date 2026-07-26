@@ -18,9 +18,13 @@ import {
   ArrowLeft, Check, Lock, Sun, Moon,
 } from "lucide-react";
 import { User, UserRole } from "../types";
-import { loginUser, registerUser } from "../services/api";
+import {
+  loginUser, registerUser, sendEmailOtp, verifyEmailOtp,
+  registerPoliceOfficer, resetPasswordWithOtp,
+} from "../services/api";
 import { Select } from "../design";
 import { useTheme } from "../context/ThemeContext";
+import { OtpVerificationModal } from "./OtpVerificationModal";
 
 // ─── Shared style constants ──────────────────────────────────────────────────
 // INPUT applies to both <input> and <select> elements.
@@ -365,34 +369,87 @@ const PoliceLoginForm: React.FC<PoliceLoginProps> = memo(({
 ));
 PoliceLoginForm.displayName = "PoliceLoginForm";
 
-// ─── PoliceRestrictedNotice — stable, defined OUTSIDE parent ─────────────────
-const PoliceRestrictedNotice: React.FC<{ onBack: () => void }> = memo(({ onBack }) => (
-  <div className="text-center space-y-4 py-4">
-    <div className="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center"
-      style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.2)" }}>
-      <Lock className="w-7 h-7 text-amber-400" />
-    </div>
+// ─── PoliceRegisterForm — stable, defined OUTSIDE parent ───────────────────
+interface PoliceRegisterProps {
+  fullName: string; setFullName: (v: string) => void;
+  email: string; setEmail: (v: string) => void;
+  mobile: string; setMobile: (v: string) => void;
+  employeeId: string; setEmployeeId: (v: string) => void;
+  badgeNumber: string; setBadgeNumber: (v: string) => void;
+  password: string; setPassword: (v: string) => void;
+  confirmPassword: string; setConfirmPassword: (v: string) => void;
+  rank: string; setRank: (v: string) => void;
+  department: string; setDepartment: (v: string) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  loading: boolean;
+}
+const PoliceRegisterForm: React.FC<PoliceRegisterProps> = memo(({
+  fullName, setFullName, email, setEmail, mobile, setMobile,
+  employeeId, setEmployeeId, badgeNumber, setBadgeNumber,
+  password, setPassword, confirmPassword, setConfirmPassword,
+  rank, setRank, department, setDepartment, onSubmit, loading,
+}) => (
+  <form onSubmit={onSubmit} className="space-y-3">
     <div>
-      <p className="font-extrabold text-amber-300 uppercase tracking-widest text-sm">Public Registration Prohibited</p>
-      <p className="text-slate-400 text-xs mt-2 leading-relaxed max-w-sm mx-auto">
-        Police officer accounts are provisioned only by authorized administrators under Ministry of Home Affairs security mandates.
-      </p>
+      <label className={LABEL}>Full Legal Name *</label>
+      <input type="text" required value={fullName} onChange={e => setFullName(e.target.value)}
+        placeholder="Officer Full Name" className={INPUT} />
     </div>
-    <div className="text-left rounded-xl p-4 text-xs font-mono space-y-1.5"
-      style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.05)" }}>
-      <p className="text-amber-400 font-bold uppercase text-[10px] tracking-wider">To obtain access:</p>
-      <p className="text-slate-400">1. Contact your Precinct IT Nodal Officer.</p>
-      <p className="text-slate-400">2. Administrator provisions your account in Officer Management.</p>
-      <p className="text-slate-400">3. Use issued Employee ID to sign in.</p>
+    <div className="grid grid-cols-2 gap-2">
+      <div>
+        <label className={LABEL}>Official Email *</label>
+        <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
+          placeholder="officer@delhipolice.gov.in" className={INPUT} />
+      </div>
+      <div>
+        <label className={LABEL}>Mobile Number *</label>
+        <input type="text" required value={mobile} onChange={e => setMobile(e.target.value)}
+          placeholder="+91 98765 43210" className={INPUT} />
+      </div>
     </div>
-    <button type="button" onClick={onBack}
-      className="px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider cursor-pointer"
-      style={{ background: "linear-gradient(135deg,#92400e,#D4AF37)", color: "#000" }}>
-      Return to Sign In
-    </button>
-  </div>
+    <div className="grid grid-cols-2 gap-2">
+      <div>
+        <label className={LABEL}>Employee ID *</label>
+        <input type="text" required value={employeeId} onChange={e => setEmployeeId(e.target.value)}
+          placeholder="IND-POL-8841" className={INPUT} />
+      </div>
+      <div>
+        <label className={LABEL}>Badge Number *</label>
+        <input type="text" required value={badgeNumber} onChange={e => setBadgeNumber(e.target.value)}
+          placeholder="DEL-8841" className={INPUT} />
+      </div>
+    </div>
+    <div className="grid grid-cols-2 gap-2">
+      <Select dark label="Rank *" value={rank} onChange={e => setRank(e.target.value)}>
+        <option value="Inspector">Inspector</option>
+        <option value="Sub-Inspector">Sub-Inspector</option>
+        <option value="Assistant Sub-Inspector">Assistant Sub-Inspector</option>
+        <option value="Head Constable">Head Constable</option>
+        <option value="Deputy Commissioner">Deputy Commissioner</option>
+      </Select>
+      <Select dark label="Department *" value={department} onChange={e => setDepartment(e.target.value)}>
+        <option value="Crime Branch & AI Intelligence">Crime Branch & AI Unit</option>
+        <option value="Cyber Crime Cell">Cyber Crime Cell</option>
+        <option value="Special Operations Cell">Special Operations Cell</option>
+        <option value="Traffic & Field Dispatch">Traffic & Field Dispatch</option>
+      </Select>
+    </div>
+    <div className="grid grid-cols-2 gap-2">
+      <div>
+        <label className={LABEL}>Password *</label>
+        <input type="password" required value={password} onChange={e => setPassword(e.target.value)}
+          placeholder="••••••••••••" className={INPUT} />
+      </div>
+      <div>
+        <label className={LABEL}>Confirm Password *</label>
+        <input type="password" required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
+          placeholder="••••••••••••" className={INPUT} />
+      </div>
+    </div>
+    <SubmitBtn label="Register Officer & Request OTP" isLoading={loading} variant="police" />
+  </form>
 ));
-PoliceRestrictedNotice.displayName = "PoliceRestrictedNotice";
+PoliceRegisterForm.displayName = "PoliceRegisterForm";
 
 // ─── ForgotModal — stable, defined OUTSIDE parent ────────────────────────────
 const ForgotModal: React.FC<{ onClose: () => void }> = memo(({ onClose }) => (
@@ -564,11 +621,28 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   const [regPinCode,         setRegPinCode]         = useState("");
   const [regCitizenId,       setRegCitizenId]       = useState("");
 
-  // Police Login
+  // Police Login & Direct Register
   const [polEmployeeId, setPolEmployeeId] = useState("");
   const [polPassword,   setPolPassword]   = useState("");
   const [polDepartment, setPolDepartment] = useState("Crime Branch & AI Intelligence");
   const [polStation,    setPolStation]    = useState("DEL-HQ-01");
+
+  const [polFullName, setPolFullName] = useState("");
+  const [polEmail, setPolEmail] = useState("");
+  const [polMobile, setPolMobile] = useState("");
+  const [polBadgeNumber, setPolBadgeNumber] = useState("");
+  const [polRegEmployeeId, setPolRegEmployeeId] = useState("");
+  const [polRegPassword, setPolRegPassword] = useState("");
+  const [polRegConfirmPassword, setPolRegConfirmPassword] = useState("");
+  const [polRank, setPolRank] = useState("Inspector");
+  const [polRegDepartment, setPolRegDepartment] = useState("Crime Branch & AI Intelligence");
+
+  // OTP Modal State
+  const [otpModalOpen, setOtpModalOpen] = useState(false);
+  const [otpEmail, setOtpEmail] = useState("");
+  const [otpPurpose, setOtpPurpose] = useState<"REGISTRATION" | "PASSWORD_RESET">("REGISTRATION");
+  const [pendingUserType, setPendingUserType] = useState<"citizen" | "police">("citizen");
+  const [debugOtp, setDebugOtp] = useState<string | undefined>(undefined);
 
   const navigateTo = (step: typeof currentStep) => { setErrorMessage(""); setCurrentStep(step); };
 
@@ -586,10 +660,68 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     if (regPassword !== regConfirmPassword) { setErrorMessage("Passwords do not match."); return; }
     setLoading(true);
     try {
-      const res = await registerUser({ full_name: regFullName, email: regEmail, phone: regMobile, password: regPassword, address: regAddress, state: regState, city: regCity, pin_code: regPinCode, citizen_id: regCitizenId });
-      onLoginSuccess(res.user);
-    } catch (err: any) { setErrorMessage(err.message || "Registration failed."); }
+      const otpRes = await sendEmailOtp(regEmail, "REGISTRATION");
+      setDebugOtp(otpRes.debug_otp);
+      setOtpEmail(regEmail);
+      setOtpPurpose("REGISTRATION");
+      setPendingUserType("citizen");
+      setOtpModalOpen(true);
+    } catch (err: any) { setErrorMessage(err.message || "Failed to send OTP to email."); }
     finally { setLoading(false); }
+  };
+
+  const handlePoliceRegister = async (e: React.FormEvent) => {
+    e.preventDefault(); setErrorMessage("");
+    if (polRegPassword !== polRegConfirmPassword) { setErrorMessage("Passwords do not match."); return; }
+    setLoading(true);
+    try {
+      const otpRes = await sendEmailOtp(polEmail, "REGISTRATION");
+      setDebugOtp(otpRes.debug_otp);
+      setOtpEmail(polEmail);
+      setOtpPurpose("REGISTRATION");
+      setPendingUserType("police");
+      setOtpModalOpen(true);
+    } catch (err: any) { setErrorMessage(err.message || "Failed to send OTP to email."); }
+    finally { setLoading(false); }
+  };
+
+  const handleOtpVerify = async (otpCode: string) => {
+    if (otpPurpose === "REGISTRATION") {
+      await verifyEmailOtp(otpEmail, otpCode, "REGISTRATION");
+      if (pendingUserType === "citizen") {
+        const res = await registerUser({
+          full_name: regFullName,
+          email: regEmail,
+          phone: regMobile,
+          password: regPassword,
+          address: regAddress,
+          state: regState,
+          city: regCity,
+          pin_code: regPinCode,
+          citizen_id: regCitizenId,
+        });
+        setOtpModalOpen(false);
+        onLoginSuccess(res.user);
+      } else {
+        const res = await registerPoliceOfficer({
+          full_name: polFullName,
+          email: polEmail,
+          phone: polMobile,
+          employee_id: polRegEmployeeId,
+          badge_number: polBadgeNumber,
+          password: polRegPassword,
+          rank: polRank,
+          department: polRegDepartment,
+        });
+        setOtpModalOpen(false);
+        onLoginSuccess(res.user);
+      }
+    }
+  };
+
+  const handleOtpResend = async () => {
+    const otpRes = await sendEmailOtp(otpEmail, otpPurpose);
+    setDebugOtp(otpRes.debug_otp);
   };
 
   const handlePoliceLogin = async (e: React.FormEvent) => {
@@ -712,13 +844,34 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                   rememberMe={rememberMe}         setRememberMe={setRememberMe}
                   onSubmit={handlePoliceLogin}    onForgot={() => setShowForgot(true)}
                   onDemo={() => handleDemoLogin("police_admin")} loading={loading} />
-              : <PoliceRestrictedNotice onBack={() => setPoliceTab("login")} />}
+              : <PoliceRegisterForm
+                  fullName={polFullName}         setFullName={setPolFullName}
+                  email={polEmail}               setEmail={setPolEmail}
+                  mobile={polMobile}             setMobile={setPolMobile}
+                  employeeId={polRegEmployeeId}  setEmployeeId={setPolRegEmployeeId}
+                  badgeNumber={polBadgeNumber}   setBadgeNumber={setPolBadgeNumber}
+                  password={polRegPassword}      setPassword={setPolRegPassword}
+                  confirmPassword={polRegConfirmPassword} setConfirmPassword={setPolRegConfirmPassword}
+                  rank={polRank}                 setRank={setPolRank}
+                  department={polRegDepartment}  setDepartment={setPolRegDepartment}
+                  onSubmit={handlePoliceRegister} loading={loading} />}
           </div>
         </div>
       )}
 
       {/* Forgot modal */}
       {showForgot && <ForgotModal onClose={() => setShowForgot(false)} />}
+
+      {/* OTP Verification Modal */}
+      <OtpVerificationModal
+        email={otpEmail}
+        purpose={otpPurpose}
+        isOpen={otpModalOpen}
+        onClose={() => setOtpModalOpen(false)}
+        onVerify={handleOtpVerify}
+        onResend={handleOtpResend}
+        initialDebugOtp={debugOtp}
+      />
     </Shell>
   );
 };

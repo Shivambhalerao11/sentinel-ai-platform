@@ -66,13 +66,10 @@ export async function registerUser(payload: {
 
   role?: string;
 }): Promise<{ tokens: { access_token: string; refresh_token: string; token_type: string; expires_in: number }; user: User; message: string }> {
-  // Only citizen self-registration is supported via this function.
-  // Police accounts are created by admins via createOfficerAccount().
   const endpoint = API_ENDPOINTS.CITIZEN_REGISTER;
 
   const res = await apiClient.post(endpoint, payload);
 
-  // Persist tokens returned immediately after registration
   const { tokens, user } = res.data;
   if (tokens?.access_token) {
     localStorage.setItem("sentinel_access_token", tokens.access_token);
@@ -84,6 +81,68 @@ export async function registerUser(payload: {
     localStorage.setItem("sentinel_user_data", JSON.stringify(user));
   }
 
+  return res.data;
+}
+
+export async function sendEmailOtp(
+  email: string,
+  purpose: "REGISTRATION" | "PASSWORD_RESET" = "REGISTRATION"
+): Promise<{ message: string; debug_otp?: string }> {
+  const res = await apiClient.post(API_ENDPOINTS.SEND_OTP, { email, purpose });
+  return res.data;
+}
+
+export async function verifyEmailOtp(
+  email: string,
+  otp_code: string,
+  purpose: "REGISTRATION" | "PASSWORD_RESET" = "REGISTRATION"
+): Promise<{ message: string }> {
+  const res = await apiClient.post(API_ENDPOINTS.VERIFY_OTP, { email, otp_code, purpose });
+  return res.data;
+}
+
+export async function registerPoliceOfficer(payload: {
+  full_name: string;
+  email: string;
+  phone: string;
+  employee_id: string;
+  badge_number: string;
+  password: string;
+  rank: string;
+  department?: string;
+  specialty?: string;
+  station_id?: string;
+  precinct?: string;
+  role?: string;
+}): Promise<{ tokens: { access_token: string; refresh_token: string; token_type: string; expires_in: number }; user: User; message: string }> {
+  const res = await apiClient.post(API_ENDPOINTS.POLICE_REGISTER, payload);
+
+  const { tokens, user } = res.data;
+  if (tokens?.access_token) {
+    localStorage.setItem("sentinel_access_token", tokens.access_token);
+  }
+  if (tokens?.refresh_token) {
+    localStorage.setItem("sentinel_refresh_token", tokens.refresh_token);
+  }
+  if (user) {
+    localStorage.setItem("sentinel_user_data", JSON.stringify(user));
+  }
+
+  return res.data;
+}
+
+export async function resetPasswordWithOtp(
+  email: string,
+  otp_code: string,
+  new_password: string,
+  confirm_password: string
+): Promise<{ message: string }> {
+  const res = await apiClient.post(API_ENDPOINTS.RESET_PASSWORD_OTP, {
+    email,
+    otp_code,
+    new_password,
+    confirm_password,
+  });
   return res.data;
 }
 

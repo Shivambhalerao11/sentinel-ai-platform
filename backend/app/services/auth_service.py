@@ -273,6 +273,196 @@ class AuthService:
         created_user = self.user_repo.get_by_id(user.id)
         return _build_user_out(created_user)
 
+    def send_email_otp(self, email: str, purpose: str, request: Request) -> dict:
+        """Generate and send 6-digit Email OTP."""
+        ip = _get_client_ip(request)
+        otp_code = f"{secrets.randbelow(900000) + 100000:06d}"
+        expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
+
+        self.user_repo.store_email_otp(
+            email=email,
+            otp_code=otp_code,
+            purpose=purpose,
+            expires_at=expires_at,
+            ip_address=ip,
+        )
+        self.db.commit()
+
+        logger.info(f"Generated Email OTP for {email} ({purpose}): {otp_code}")
+
+        res = {
+            "message": f"6-digit OTP sent to {email}. Valid for 5 minutes.",
+            "expires_in": 300,
+        }
+        if settings.APP_ENV == "development":
+            res["debug_otp"] = otp_code
+        return res
+
+    def verify_email_otp(self, email: str, otp_code: str, purpose: str) -> bool:
+        """Verify 6-digit Email OTP."""
+        otp_record = self.user_repo.get_latest_email_otp(email, purpose)
+        if not otp_record:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No active OTP found for this email address. Please request a new OTP.",
+            )
+
+        if otp_record.expires_at < datetime.now(timezone.utc):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="OTP has expired. Please request a new 6-digit OTP.",
+            )
+
+        if otp_record.attempts_count >= 3:
+            otp_record.is_used = True
+            self.db.commit()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Maximum OTP verification attempts exceeded. Please request a new OTP.",
+            )
+
+        hashed_attempt = hashlib.sha256(otp_code.encode("utf-8")).hexdigest()
+        if otp_record.otp_hash != hashed_attempt:
+            otp_record.attempts_count += 1
+            self.db.commit()
+            remaining = 3 - otp_record.attempts_count
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid OTP code. {remaining} attempt(s) remaining.",
+            )
+
+        self.user_repo.mark_otp_verified(otp_record)
+        self.db.commit()
+        return True
+
+    def register_police_direct(
+        self,
+        payload: PoliceRegisterRequest,
+        request: Request,
+    ) -> LoginResponse:
+        """
+        Direct self-registration for police personnel after Email OTP verification.
+        """
+        ip = _get_client_ip(request)
+
+        if self.user_repo.email_exists(payload.email):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="An account with this email address already exists.",
+            )
+        if payload.phone and self.user_repo.phone_exists(payload.phone):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="An account with this mobile number already exists.",
+            )
+        if self.user_repo.badge_exists(payload.badge_number):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Badge number {payload.badge_number} is already registered.",
+            )
+        if self.user_repo.employee_id_exists(payload.employee_id):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Employee ID {payload.employee_id} is already registered.",
+            )
+
+        hashed = hash_password(payload.password)
+        role = UserRole.POLICE_ADMIN if payload.role == "police_admin" else UserRole.POLICE_OFFICER
+
+        user = self.user_repo.create_user(
+            email=payload.email,
+            phone=payload.phone,
+            hashed_password=hashed,
+            full_name=payload.full_name,
+            role=role,
+        )
+        user.email_verified = True
+        user.phone_verified = True
+
+        station_id = None
+        if payload.station_id:
+            try:
+                station_id = uuid.UUID(payload.station_id)
+            except ValueError:
+                pass
+
+        self.user_repo.create_police_profile(
+            user_id=user.id,
+            badge_number=payload.badge_number.upper(),
+            employee_id=payload.employee_id.upper(),
+            rank=payload.rank,
+            department=payload.department or "Crime Branch & AI Intelligence",
+            specialty=payload.specialty or "General Law Enforcement",
+            station_id=station_id,
+            precinct=payload.precinct or "Delhi Police HQ",
+        )
+
+        self.audit_repo.log(
+            action=AuditAction.USER_REGISTERED,
+            user_id=user.id,
+            user_name=user.full_name,
+            user_role=user.role,
+            ip_address=ip,
+            resource_type="user",
+            resource_id=str(user.id),
+            details=f"New police officer registered: {user.email}",
+        )
+
+        token_pair, jti, raw_refresh = _build_token_pair(user)
+        expires_at = datetime.now(timezone.utc) + timedelta(
+            days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS
+        )
+        self.user_repo.store_refresh_token(
+            user_id=user.id,
+            token=raw_refresh,
+            jti=jti,
+            expires_at=expires_at,
+            ip_address=ip,
+        )
+
+        self.db.commit()
+        logger.info("Direct Police Registration completed", user_id=str(user.id), badge=payload.badge_number)
+
+        full_user = self.user_repo.get_by_id(user.id)
+        return LoginResponse(
+            tokens=token_pair,
+            user=_build_user_out(full_user),
+            message="Police Officer registration successful. Welcome to Sentinel Command.",
+        )
+
+    def reset_password_with_otp(
+        self,
+        email: str,
+        otp_code: str,
+        new_password: str,
+        request: Request,
+    ) -> None:
+        """Reset user password after OTP verification."""
+        self.verify_email_otp(email, otp_code, "PASSWORD_RESET")
+        user = self.user_repo.get_by_email(email)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User account not found.",
+            )
+
+        user.hashed_password = hash_password(new_password)
+        user.failed_login_attempts = 0
+        user.account_status = AccountStatus.ACTIVE
+        user.locked_until = None
+
+        ip = _get_client_ip(request)
+        self.audit_repo.log(
+            action=AuditAction.PASSWORD_RESET,
+            user_id=user.id,
+            user_name=user.full_name,
+            user_role=user.role,
+            ip_address=ip,
+            details=f"Password reset completed via OTP for {email}",
+        )
+        self.db.commit()
+        logger.info("Password reset via OTP completed", user_id=str(user.id))
+
     def login_citizen(
         self,
         payload: CitizenLoginRequest,

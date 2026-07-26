@@ -21,6 +21,7 @@ from app.schemas.auth import (
     LoginResponse, PasswordResetConfirmSchema, PasswordResetRequestSchema,
     PoliceLoginRequest, PoliceRegisterRequest, RefreshTokenRequest,
     TokenPair, UserPublicOut, VerifyEmailRequest,
+    SendEmailOtpRequest, VerifyEmailOtpRequest, ResetPasswordWithOtpRequest,
 )
 from app.schemas.common import SuccessResponse
 from app.services.auth_service import AuthService
@@ -175,6 +176,82 @@ def get_me(
     user_repo = UserRepository(db)
     user = user_repo.get_by_id(current_user.id)
     return _build_user_out(user)
+
+
+@router.post(
+    "/otp/send",
+    response_model=SuccessResponse,
+    summary="Send 6-digit Email OTP",
+    description="Generates a 6-digit OTP valid for 5 minutes.",
+)
+def send_otp(
+    payload: SendEmailOtpRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+) -> SuccessResponse:
+    from app.middleware.rate_limit import rate_limiter
+    rate_limiter.check_rate_limit(request.client.host if request.client else "unknown", "send_otp", max_requests=5, window_seconds=300)
+
+    service = AuthService(db)
+    res = service.send_email_otp(str(payload.email), payload.purpose, request)
+    return SuccessResponse(message=res["message"], data=res)
+
+
+@router.post(
+    "/otp/verify",
+    response_model=SuccessResponse,
+    summary="Verify 6-digit Email OTP",
+    description="Validates OTP code for registration or password reset.",
+)
+def verify_otp(
+    payload: VerifyEmailOtpRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+) -> SuccessResponse:
+    from app.middleware.rate_limit import rate_limiter
+    rate_limiter.check_rate_limit(request.client.host if request.client else "unknown", "verify_otp", max_requests=10, window_seconds=60)
+
+    service = AuthService(db)
+    service.verify_email_otp(str(payload.email), payload.otp_code, payload.purpose)
+    return SuccessResponse(message="Email OTP verified successfully.")
+
+
+@router.post(
+    "/register/police",
+    response_model=LoginResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Register a new police officer account",
+    description="Creates a police officer account directly after Email OTP verification.",
+)
+def register_police_direct(
+    payload: PoliceRegisterRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+) -> LoginResponse:
+    from app.middleware.rate_limit import rate_limiter
+    rate_limiter.check_rate_limit(request.client.host if request.client else "unknown", "register_police", max_requests=5, window_seconds=60)
+
+    service = AuthService(db)
+    return service.register_police_direct(payload, request)
+
+
+@router.post(
+    "/password/reset/otp",
+    response_model=SuccessResponse,
+    summary="Reset password via Email OTP",
+    description="Resets user password after verifying 6-digit OTP code.",
+)
+def reset_password_with_otp(
+    payload: ResetPasswordWithOtpRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+) -> SuccessResponse:
+    from app.middleware.rate_limit import rate_limiter
+    rate_limiter.check_rate_limit(request.client.host if request.client else "unknown", "reset_password_otp", max_requests=5, window_seconds=60)
+
+    service = AuthService(db)
+    service.reset_password_with_otp(str(payload.email), payload.otp_code, payload.new_password, request)
+    return SuccessResponse(message="Password reset successful. You can now log in with your new password.")
 
 
 @router.post(

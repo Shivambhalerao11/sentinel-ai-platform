@@ -250,5 +250,22 @@ class EmailVerificationToken(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     user: Mapped["User"] = relationship("User", back_populates="email_verification_tokens")
 
 
+class EmailOTP(Base, UUIDPrimaryKeyMixin, TimestampMixin):
+    """
+    Secure 6-digit Email OTP tokens for Registration and Password Reset.
+    """
+    __tablename__ = "email_otps"
+
+    email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    otp_hash: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    purpose: Mapped[str] = mapped_column(String(50), nullable=False, default="REGISTRATION", index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    attempts_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_used: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    verified_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    ip_address: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
+
+
 # PoliceStation is referenced via string forward-reference in PoliceProfile relationship
 # No import needed here — SQLAlchemy resolves it at mapper configuration time.

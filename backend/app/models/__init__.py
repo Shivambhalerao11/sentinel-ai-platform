@@ -5,7 +5,7 @@ from app.db.base import Base  # noqa: F401
 from app.models.enums import *  # noqa: F401,F403
 from app.models.user import (  # noqa: F401
     User, CitizenProfile, PoliceProfile,
-    RefreshToken, PasswordResetToken, EmailVerificationToken
+    RefreshToken, PasswordResetToken, EmailVerificationToken, EmailOTP
 )
 from app.models.location import District, PoliceStation, PatrolUnit  # noqa: F401
 from app.models.complaint import (  # noqa: F401

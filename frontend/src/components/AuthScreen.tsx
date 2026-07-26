@@ -36,12 +36,14 @@ const Shell: React.FC<{ children: React.ReactNode }> = memo(({ children }) => {
 
   return (
     <div
-      className="min-h-screen flex flex-col font-sans overflow-hidden relative"
+      className="min-h-screen flex flex-col font-sans relative"
       style={{ background: isDark ? "linear-gradient(160deg,#000810 0%,#020d1f 60%,#000810 100%)" : "radial-gradient(ellipse 80% 50% at 50% 0%, #EEF3FF 0%, #F8FAFC 60%, #F1F5F9 100%)" }}
     >
-      <div className="absolute inset-0 pointer-events-none opacity-[0.04]"
+      {/* Background grid — fixed so it doesn't affect layout/scroll */}
+      <div className="fixed inset-0 pointer-events-none opacity-[0.04]"
         style={{ backgroundImage: "linear-gradient(rgba(20,184,166,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(20,184,166,.5) 1px,transparent 1px)", backgroundSize: "48px 48px" }} />
-      <div className="relative z-20 flex items-center justify-between px-5 py-3 border-b"
+      {/* Sticky header — stays visible while form scrolls */}
+      <div className="sticky top-0 z-20 flex items-center justify-between px-5 py-3 border-b shrink-0"
         style={{ borderColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.08)", background: isDark ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.8)", backdropFilter: "blur(12px)" }}>
         <div className="flex items-center space-x-3">
           <Shield className="w-4 h-4 text-amber-400" />
@@ -80,8 +82,11 @@ const Shell: React.FC<{ children: React.ReactNode }> = memo(({ children }) => {
           </button>
         </div>
       </div>
-      <div className="relative z-10 flex-1 flex items-center justify-center p-4 sm:p-6 md:p-10">{children}</div>
-      <footer className="relative z-10 text-center py-3 font-mono text-[9px] tracking-widest uppercase"
+      {/* Content area — grows with content, allows page-level scroll */}
+      <div className="relative z-10 flex-1 flex items-start justify-center p-4 sm:p-6 md:p-10 py-8">
+        <div className="w-full flex justify-center">{children}</div>
+      </div>
+      <footer className="relative z-10 text-center py-3 font-mono text-[9px] tracking-widest uppercase shrink-0"
         style={{ color: isDark ? "rgba(71,85,105,0.6)" : "rgba(71,85,105,0.8)", borderTop: isDark ? "1px solid rgba(255,255,255,0.04)" : "1px solid rgba(0,0,0,0.06)" }}>
         BNS 2023 Compliant · ISO 27001 Infrastructure · NIC Certified
       </footer>

@@ -128,7 +128,7 @@ const CinematicLanding: React.FC<Props> = ({ onLoginSuccess }) => {
       {/* Premium Ashoka cursor — always present */}
       <PremiumCursor />
 
-      <div className="fixed inset-0 overflow-hidden" style={{ background: "#000", cursor: "none" }}>
+      <div className="fixed inset-0 overflow-hidden" style={{ background: "#000", cursor: "none" }} id="cinematic-root">
 
         {/* ── Cinematic Sequence ──────────────────────────────────────────── */}
         <AnimatePresence>
@@ -204,21 +204,22 @@ const CinematicLanding: React.FC<Props> = ({ onLoginSuccess }) => {
         {/* ── Auth Forms ──────────────────────────────────────────────────── */}
         <AnimatePresence>
           {showAuth && (
-            <motion.div className="fixed inset-0 z-50"
+            <motion.div className="fixed inset-0 z-50 overflow-y-auto"
               initial={{ opacity: 0, scale: 0.985 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.985 }}
               transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
             >
-              <div className="absolute inset-0" style={{
+              {/* Fixed background layer — does NOT clip content */}
+              <div className="fixed inset-0 pointer-events-none" style={{
                 background: "linear-gradient(160deg,#000810 0%,#020d1f 50%,#000810 100%)"
               }}/>
-              <div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{
+              <div className="fixed inset-0 pointer-events-none opacity-[0.03]" style={{
                 backgroundImage: "linear-gradient(rgba(20,184,166,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(20,184,166,.5) 1px,transparent 1px)",
                 backgroundSize: "48px 48px",
               }}/>
               <motion.button
-                className="absolute top-5 left-5 z-50 flex items-center space-x-2 font-mono text-[11px] tracking-widest uppercase px-4 py-2 rounded-lg border cursor-none"
+                className="fixed top-5 left-5 z-50 flex items-center space-x-2 font-mono text-[11px] tracking-widest uppercase px-4 py-2 rounded-lg border cursor-none"
                 style={{ background:"rgba(0,0,0,0.6)", borderColor:"rgba(212,175,55,0.18)", color:"rgba(212,175,55,0.65)", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)" }}
                 initial={{ opacity:0, x:-20 }} animate={{ opacity:1, x:0 }}
                 transition={{ delay:0.25, duration:0.4 }}
@@ -228,7 +229,8 @@ const CinematicLanding: React.FC<Props> = ({ onLoginSuccess }) => {
               >
                 <span>←</span><span>Portal Select</span>
               </motion.button>
-              <div className="relative z-10 h-full">
+              {/* Scrollable auth content — min-h-screen so it fills viewport on short forms */}
+              <div className="relative z-10 min-h-screen">
                 <AuthScreen onLoginSuccess={onLoginSuccess} initialStep={authView} />
               </div>
             </motion.div>

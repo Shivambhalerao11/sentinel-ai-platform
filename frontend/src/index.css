@@ -1,0 +1,619 @@
+@import "tailwindcss";
+
+/* ─── Sentinel Design System CSS Variables ──────────────────────────────────── */
+:root {
+  --color-navy:       #07111E;
+  --color-navy-mid:   #0B1A2F;
+  --color-blue:       #163A70;
+  --color-blue-mid:   #1E4A8A;
+  --color-gold:       #D4AF37;
+  --color-gold-light: #F5E27A;
+  --color-gold-dark:  #8B6914;
+  --color-saffron:    #C8520E;
+  --color-green:      #0A6E1E;
+  --color-critical:   #DC2626;
+  --color-high:       #D97706;
+  --color-surface:    #F8FAFC;
+  --color-border:     #E2E8F0;
+  --color-text:       #0F172A;
+  --color-text-muted: #475569;
+  --shadow-card:      0 2px 12px rgba(7,17,30,0.07), inset 0 1px 0 rgba(255,255,255,0.5);
+  --shadow-gold:      0 0 24px rgba(212,175,55,0.2);
+  --radius-card:      16px;
+
+  /* ── Dropdown token set ── */
+  --select-bg:           #0B1A2F;
+  --select-bg-option:    #0F2340;
+  --select-bg-hover:     #163A70;
+  --select-bg-selected:  #163A70;
+  --select-text:         #FFFFFF;
+  --select-text-muted:   #E5E7EB;
+  --select-border:       rgba(255, 255, 255, 0.15);
+  --select-border-hover: rgba(212, 175, 55, 0.5);
+  --select-gold:         #D4AF37;
+  --select-ring-gold:    rgba(212, 175, 55, 0.25);
+}
+
+@layer base {
+  body {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  /* Smooth transitions — scoped to safe properties only.
+     NOTE: Do NOT apply transitions to * — this causes input focus loss
+     because it intercepts the browser's internal focus management.
+     Transitions are applied per-component instead. */
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   GLOBAL DROPDOWN DESIGN SYSTEM
+   Applies to EVERY native <select> element across the entire application.
+   Root cause fix: Browser engines (Chromium, Firefox, WebKit) render <option>
+   popups using system chrome. By defining high-specificity background-color,
+   text-color, and custom gold chevrons on select & option elements, options
+   maintain WCAG AAA contrast ratio (> 10:1) with dark navy/graphite backgrounds
+   and high-contrast crisp white text in ALL theme contexts.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* ── Base select element ─────────────────────────────────────────────────── */
+select,
+.ds-select,
+select.ds-select {
+  background-color: var(--select-bg) !important;
+  color:            var(--select-text) !important;
+  border-color:     var(--select-border) !important;
+  font-family:      'Inter', system-ui, -apple-system, sans-serif !important;
+
+  /* Custom chevron — gold coloured SVG arrow */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23D4AF37' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-repeat:   no-repeat !important;
+  background-position: right 12px center !important;
+  background-size:     12px !important;
+  padding-right:       2.25rem !important;
+  -webkit-appearance:  none !important;
+  -moz-appearance:     none !important;
+  appearance:          none !important;
+
+  /* Premium border + shadow */
+  border-width:  1px !important;
+  border-style:  solid !important;
+  border-radius: 0.75rem !important;
+  box-shadow:    0 2px 10px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06) !important;
+  cursor:        pointer !important;
+  outline:       none !important;
+  transition:    border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease !important;
+}
+
+select:hover,
+.ds-select:hover {
+  border-color: var(--select-border-hover) !important;
+  box-shadow:   0 4px 16px rgba(0,0,0,0.4), 0 0 0 1px rgba(212,175,55,0.2) !important;
+}
+
+select:focus,
+select:focus-visible,
+.ds-select:focus {
+  border-color: var(--select-gold) !important;
+  box-shadow:   0 0 0 3px var(--select-ring-gold), 0 4px 16px rgba(0,0,0,0.4) !important;
+  outline:      none !important;
+}
+
+/* ── Option elements — sets popup background + text in supporting browsers ── */
+select option,
+.ds-select option,
+.select-light option,
+.select-dark option {
+  background-color: var(--select-bg-option) !important;
+  color:            #FFFFFF !important;
+  font-family:      'Inter', system-ui, -apple-system, sans-serif !important;
+  font-size:        0.8125rem !important;
+  font-weight:      500 !important;
+  padding:          10px 14px !important;
+}
+
+select option:checked,
+select option:focus,
+select option[selected],
+.ds-select option:checked,
+.ds-select option:focus {
+  background-color: var(--select-bg-hover) !important;
+  color:            #FFFFFF !important;
+  font-weight:      700 !important;
+}
+
+select option:hover,
+.ds-select option:hover {
+  background-color: #1E4A8A !important;
+  color:            #FFFFFF !important;
+}
+
+select option:disabled {
+  background-color: #07111E !important;
+  color:            #64748B !important;
+}
+
+optgroup {
+  background-color: #07111E !important;
+  color:            #D4AF37 !important;
+  font-weight:      700 !important;
+  padding:          6px 12px !important;
+}
+
+/* ── Light-context selects — used in GisMap, CitizenView (white cards) ─────── */
+.select-light,
+select.select-light {
+  background-color: #0F2340 !important;
+  color:            #FFFFFF !important;
+  border-color:     rgba(22, 58, 112, 0.3) !important;
+  box-shadow:       0 2px 10px rgba(7, 17, 30, 0.15) !important;
+}
+
+.select-light option {
+  background-color: #0F2340 !important;
+  color:            #FFFFFF !important;
+}
+
+/* ── Dark-context override ─────────────────────────────────────────────────── */
+.select-dark,
+select.select-dark {
+  background-color: var(--select-bg) !important;
+  color:            #FFFFFF !important;
+  border-color:     rgba(255, 255, 255, 0.15) !important;
+}
+
+.select-dark option {
+  background-color: var(--select-bg-option) !important;
+  color:            #FFFFFF !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   GLOBAL INPUT TEXT VISIBILITY & CONTRAST SYSTEM
+   Fixes typed text contrast, password bullets visibility, gold caret, placeholder,
+   selection text & background, focus glow and transitions for ALL input elements.
+   ───────────────────────────────────────────────────────────────────────── */
+
+input,
+textarea,
+.ds-input {
+  caret-color: #D4AF37 !important;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease !important;
+}
+
+/* High contrast selection state */
+input::selection,
+textarea::selection,
+.ds-input::selection {
+  background-color: #163A70 !important;
+  color: #FFFFFF !important;
+}
+
+/* High contrast password characters (bullets/dots) */
+input[type="password"] {
+  letter-spacing: 0.15em !important;
+}
+
+/* Dark theme & dark input styling — typed text pure white (#FFFFFF), caret gold */
+.dark input,
+.dark textarea,
+input.input-dark,
+textarea.input-dark {
+  color: #FFFFFF !important;
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder,
+input.input-dark::placeholder,
+textarea.input-dark::placeholder {
+  color: #BFC7D5 !important;
+  opacity: 1 !important;
+}
+
+.dark input:focus,
+.dark textarea:focus,
+input.input-dark:focus,
+textarea.input-dark:focus {
+  color: #FFFFFF !important;
+  border-color: #D4AF37 !important;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.22), 0 0 12px rgba(37, 99, 235, 0.25) !important;
+  outline: none !important;
+}
+
+/* Light theme & light input styling — typed text dark slate (#0F172A), caret gold */
+html:not(.dark) input:not(.input-dark),
+html:not(.dark) textarea:not(.input-dark),
+input.input-light,
+textarea.input-light {
+  color: #0F172A !important;
+  background-color: #F8FAFC !important;
+  border-color: #CBD5E1 !important;
+}
+
+html:not(.dark) input:not(.input-dark)::placeholder,
+html:not(.dark) textarea:not(.input-dark)::placeholder,
+input.input-light::placeholder,
+textarea.input-light::placeholder {
+  color: #64748B !important;
+  opacity: 1 !important;
+}
+
+html:not(.dark) input:not(.input-dark):focus,
+html:not(.dark) textarea:not(.input-dark):focus,
+input.input-light:focus,
+textarea.input-light:focus {
+  color: #0F172A !important;
+  background-color: #FFFFFF !important;
+  border-color: #163A70 !important;
+  box-shadow: 0 0 0 3px rgba(22, 58, 112, 0.18), 0 0 10px rgba(212, 175, 55, 0.15) !important;
+  outline: none !important;
+}
+
+/* Disabled input state */
+input:disabled,
+textarea:disabled {
+  opacity: 0.65 !important;
+  cursor: not-allowed !important;
+  color: #94A3B8 !important;
+}
+
+.font-mono-data {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Pulse animation for SOS / Emergency alerts */
+@keyframes emergency-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(220, 38, 38, 0);
+  }
+}
+
+.animate-emergency-pulse {
+  animation: emergency-pulse 2s infinite;
+}
+
+/* Leaflet map overrides */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  border-radius: 0.75rem;
+  z-index: 1;
+}
+
+/* ─── Cinematic Landing Animations ──────────────────────────────────────────── */
+
+/* Floating ambient particle dots */
+@keyframes floatDot {
+  0%   { transform: translateY(0px) scale(1); opacity: 0.3; }
+  100% { transform: translateY(-18px) scale(1.3); opacity: 0.6; }
+}
+
+/* Gold shimmer sweep on title text */
+@keyframes goldShimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Cinematic scan line */
+@keyframes scanLine {
+  0%   { top: -2px; }
+  100% { top: 100%; }
+}
+
+/* Typewriter cursor blink */
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+/* Intelligence node pulse */
+@keyframes nodePulse {
+  0%, 100% { transform: scale(1);   opacity: 0.8; }
+  50%       { transform: scale(1.4); opacity: 0.4; }
+}
+
+/* Orbital ring spin (fallback for elements not using Framer Motion) */
+@keyframes orbitSpin {
+  from { transform: translate(-50%, -50%) rotate(0deg);   }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Glitch flicker (used on restricted text) */
+@keyframes glitchFlicker {
+  0%, 94%, 96%, 100% { opacity: 1; }
+  95%                 { opacity: 0.3; }
+}
+
+/* Text reveal by clip-path */
+@keyframes textRevealUp {
+  from { clip-path: inset(100% 0 0 0); transform: translateY(8px); }
+  to   { clip-path: inset(0 0 0 0);    transform: translateY(0); }
+}
+
+/* Cinematic letterbox bars */
+@keyframes letterboxIn {
+  from { height: 12vh; }
+  to   { height: 0; }
+}
+
+.animate-gold-shimmer {
+  background: linear-gradient(90deg, #8B6914, #D4AF37, #F5E27A, #D4AF37, #8B6914);
+  background-size: 200% auto;
+  animation: goldShimmer 3s linear infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.animate-text-reveal {
+  animation: textRevealUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-cursor-blink {
+  animation: cursorBlink 1s step-end infinite;
+}
+
+.animate-glitch {
+  animation: glitchFlicker 4s ease-in-out infinite;
+}
+
+/* Landing page dark scrollbar */
+.landing-scrollbar::-webkit-scrollbar { width: 4px; }
+.landing-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.landing-scrollbar::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.2); border-radius: 2px; }
+
+/* Cinematic letterbox — top and bottom black bars */
+.letterbox-top,
+.letterbox-bottom {
+  position: fixed;
+  inset-x: 0;
+  background: #000;
+  z-index: 100;
+  pointer-events: none;
+  height: 0;
+}
+.letterbox-top    { top: 0; }
+.letterbox-bottom { bottom: 0; }
+.letterbox-active .letterbox-top,
+.letterbox-active .letterbox-bottom {
+  height: 6vh;
+}
+
+/* ─── v2 Cinematic Enhancements ─────────────────────────────────────────────── */
+
+/* Metallic engraving shimmer — sweeps left-to-right on GOVERNMENT OF INDIA */
+@keyframes metallicShimmer {
+  0%   { background-position: -300% center; }
+  100% { background-position: 300% center; }
+}
+
+/* Holographic flicker — for MINISTRY line */
+@keyframes holoFlicker {
+  0%, 92%, 95%, 100% { opacity: 1;   filter: hue-rotate(0deg); }
+  93%                 { opacity: 0.7; filter: hue-rotate(15deg) brightness(1.3); }
+  94%                 { opacity: 1;   filter: hue-rotate(-8deg); }
+}
+
+/* Gold dust fall — small particles dropping from text */
+@keyframes dustFall {
+  0%   { transform: translateY(0) translateX(0) scale(1);   opacity: 0.6; }
+  50%  { opacity: 0.4; }
+  100% { transform: translateY(60px) translateX(var(--dx,4px)) scale(0.4); opacity: 0; }
+}
+
+/* Engraved letter depth — subtle scale-in from flat to 3D */
+@keyframes letterEngrave {
+  0%   { transform: perspective(600px) rotateX(-45deg) scaleY(0.6); opacity: 0; filter: blur(4px); }
+  60%  { filter: blur(0px); }
+  100% { transform: perspective(600px) rotateX(0deg)  scaleY(1);   opacity: 1; }
+}
+
+/* Silk wave — subtle horizontal undulation for flag bands */
+@keyframes silkWave {
+  0%, 100% { transform: skewX(0deg) scaleX(1); }
+  25%       { transform: skewX(0.3deg) scaleX(1.002); }
+  75%       { transform: skewX(-0.2deg) scaleX(0.999); }
+}
+
+/* Volumetric scan sweep on title */
+@keyframes volumetricSweep {
+  0%   { left: -30%; opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { left: 130%; opacity: 0; }
+}
+
+/* Gentle glow pulse for orbital rings */
+@keyframes orbitalGlow {
+  0%, 100% { box-shadow: 0 0 12px 1px rgba(212,175,55,0.06); }
+  50%       { box-shadow: 0 0 24px 4px rgba(212,175,55,0.12); }
+}
+
+/* ── Utility classes for CinematicOverlay ── */
+
+.metallic-text {
+  background: linear-gradient(
+    90deg,
+    #6b4c0a 0%,
+    #c9912a 20%,
+    #f5e27a 38%,
+    #ffffff 50%,
+    #f5e27a 62%,
+    #c9912a 80%,
+    #6b4c0a 100%
+  );
+  background-size: 250% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: metallicShimmer 4s linear infinite;
+}
+
+.holo-text {
+  animation: holoFlicker 5s ease-in-out infinite;
+}
+
+.silk-band {
+  animation: silkWave 4s ease-in-out infinite;
+}
+
+/* Reduced-motion overrides */
+@media (prefers-reduced-motion: reduce) {
+  .metallic-text,
+  .holo-text,
+  .silk-band,
+  .animate-gold-shimmer,
+  .animate-cursor-blink {
+    animation: none;
+  }
+}
+
+/* ─── Premium Cursor ─────────────────────────────────────────────────────────
+   Hides native cursor only while the landing/cinematic experience is active.
+   The .cursor-none class is applied on the root landing div.              */
+
+.cursor-none,
+.cursor-none * {
+  cursor: none !important;
+}
+
+/* Restore default cursor inside the auth forms (usability) */
+.cursor-none input,
+.cursor-none select,
+.cursor-none textarea {
+  cursor: text !important;
+}
+
+/* ─── v3 Performance micro-optimisations ────────────────────────────────────── */
+
+/* Force GPU layer on all animated landing elements */
+.landing-layer {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Faster metallic shimmer — 2.5s instead of 4s */
+.metallic-text {
+  animation-duration: 2.5s !important;
+}
+
+/* Prevent layout thrash on flag bands */
+.flag-band {
+  contain: strict;
+  will-change: transform;
+}
+
+/* Subtle cursor magnetic pulse on hover */
+@keyframes cursorPulse {
+  0%,100% { transform: scale(1); opacity: 0.7; }
+  50%      { transform: scale(1.15); opacity: 1; }
+}
+
+/* ─── Unified Design System Utilities ───────────────────────────────────────── */
+
+/* Premium dark-mode scrollbars */
+.dark ::-webkit-scrollbar          { width: 5px; height: 5px; }
+.dark ::-webkit-scrollbar-track    { background: rgba(255,255,255,0.04); }
+.dark ::-webkit-scrollbar-thumb    { background: rgba(212,175,55,0.22); border-radius: 3px; }
+.dark ::-webkit-scrollbar-thumb:hover { background: rgba(212,175,55,0.4); }
+
+/* Card glass */
+.ds-glass-light {
+  background: rgba(255,255,255,0.70);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.5);
+}
+.ds-glass-dark {
+  background: rgba(7,17,30,0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.07);
+}
+
+/* Premium card shadow */
+.ds-card-shadow {
+  box-shadow: 0 2px 12px rgba(7,17,30,0.07), inset 0 1px 0 rgba(255,255,255,0.5);
+}
+.dark .ds-card-shadow {
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+/* Gold shimmer on text */
+.ds-gold-text {
+  background: linear-gradient(135deg, #8B6914 0%, #D4AF37 35%, #F5E27A 55%, #D4AF37 75%, #8B6914 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Smooth page background — dark */
+.ds-page-dark {
+  background: radial-gradient(ellipse 90% 60% at 50% 0%, #0F2340 0%, #0B1A2F 40%, #07111E 100%);
+}
+
+/* Smooth page background — light */
+.ds-page-light {
+  background: radial-gradient(ellipse 80% 50% at 50% 0%, #EEF3FF 0%, #F8FAFC 60%, #F1F5F9 100%);
+}
+
+/* Micro-grid overlay */
+.ds-grid-dark  { background-image: linear-gradient(rgba(37,99,235,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(37,99,235,0.04) 1px,transparent 1px); background-size: 48px 48px; }
+.ds-grid-light { background-image: linear-gradient(rgba(22,58,112,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(22,58,112,0.04) 1px,transparent 1px); background-size: 48px 48px; }
+
+/* Sidebar active tab highlight */
+.ds-nav-active {
+  background: white;
+  color: #163A70;
+  font-weight: 900;
+  box-shadow: 0 2px 8px rgba(22,58,112,0.15);
+}
+
+/* Premium focus ring */
+.ds-focus-ring:focus-visible {
+  outline: 2px solid rgba(212,175,55,0.6);
+  outline-offset: 2px;
+}
+
+/* Status indicator pulse */
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+.ds-pulse { animation: statusPulse 2s ease-in-out infinite; }
+
+/* Page entry animation */
+@keyframes pageEntry {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ds-page-entry { animation: pageEntry 0.4s cubic-bezier(0.16,1,0.3,1) forwards; }
+
+/* Stagger children (nth-child delays) */
+.ds-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.ds-stagger > *:nth-child(2) { animation-delay: 50ms; }
+.ds-stagger > *:nth-child(3) { animation-delay: 100ms; }
+.ds-stagger > *:nth-child(4) { animation-delay: 150ms; }
+.ds-stagger > *:nth-child(5) { animation-delay: 200ms; }
+.ds-stagger > *:nth-child(6) { animation-delay: 250ms; }

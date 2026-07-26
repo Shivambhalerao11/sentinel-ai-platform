@@ -1,0 +1,72 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Keep .env.example
+!.env.example
+
+# Testing
+.pytest_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+logs/*.log
+*.log
+
+# Uploads (user content - never commit)
+uploads/images/*
+uploads/videos/*
+uploads/documents/*
+!uploads/images/.gitkeep
+!uploads/videos/.gitkeep
+!uploads/documents/.gitkeep
+
+# Alembic
+migrations/versions/*.pyc
+
+# Docker
+.docker/
+
+# OS
+.DS_Store
+Thumbs.db

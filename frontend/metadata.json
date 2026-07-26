@@ -1,0 +1,12 @@
+{
+  "name": "Sentinel - Police Crime Intelligence & Emergency Response",
+  "description": "AI-powered Crime Intelligence, GIS Live Tactical Interface, Emergency SOS Dispatch & Complaint Management System for Indian Police",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

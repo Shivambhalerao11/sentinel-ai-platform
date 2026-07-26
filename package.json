@@ -1,0 +1,17 @@
+{
+  "name": "sentinel-ai-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sentinel AI - National Police Crime Intelligence Platform Monorepo",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "cd backend && uvicorn app.main:app --reload --port 8000",
+    "build": "npm --prefix frontend run build",
+    "start": "npm --prefix frontend start",
+    "lint": "npm --prefix frontend run lint"
+  },
+  "workspaces": [
+    "frontend"
+  ]
+}

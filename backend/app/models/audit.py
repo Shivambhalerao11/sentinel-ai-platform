@@ -2,9 +2,11 @@
 import uuid
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import ForeignKey, Index, String, Text
+from sqlalchemy import ForeignKey, Index, String, Text, JSON
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+JSON_TYPE = JSON().with_variant(JSONB(), "postgresql")
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 from app.models.enums import AuditAction
@@ -34,7 +36,7 @@ class AuditLog(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     resource_type: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     resource_id: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     details: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    metadata_json: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    metadata_json: Mapped[Optional[dict]] = mapped_column(JSON_TYPE, nullable=True)
     status_code: Mapped[Optional[int]] = mapped_column(nullable=True)
     session_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
 

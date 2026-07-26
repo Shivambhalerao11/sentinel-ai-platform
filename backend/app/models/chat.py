@@ -2,9 +2,11 @@
 import uuid
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import ForeignKey, String, Text, Boolean
+from sqlalchemy import ForeignKey, String, Text, Boolean, JSON
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+JSON_TYPE = JSON().with_variant(JSONB(), "postgresql")
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 from app.models.enums import ChatSender
@@ -27,8 +29,8 @@ class ChatHistory(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     sender: Mapped[ChatSender] = mapped_column(String(10), nullable=False)
     message: Mapped[str] = mapped_column(Text, nullable=False)
     intent: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    citations: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True)
-    suggested_actions: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True)
+    citations: Mapped[Optional[list]] = mapped_column(JSON_TYPE, nullable=True)
+    suggested_actions: Mapped[Optional[list]] = mapped_column(JSON_TYPE, nullable=True)
     is_emergency: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     complaint_id_mentioned: Mapped[Optional[str]] = mapped_column(String(30), nullable=True)
     processing_time_ms: Mapped[Optional[int]] = mapped_column(nullable=True)

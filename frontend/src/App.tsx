@@ -71,6 +71,22 @@ export function App() {
     }
   }, [isAuthenticated, loadData]);
 
+  useEffect(() => {
+    const savedToken = localStorage.getItem("sentinel_access_token");
+    const savedUserData = localStorage.getItem("sentinel_user_data");
+    if (savedToken && savedUserData) {
+      try {
+        const user = JSON.parse(savedUserData);
+        setCurrentUser(user);
+        setIsAuthenticated(true);
+        setActiveTab(user.role === "citizen" ? "citizen_home" : "command");
+      } catch (err) {
+        localStorage.removeItem("sentinel_access_token");
+        localStorage.removeItem("sentinel_user_data");
+      }
+    }
+  }, []);
+
   const handleLoginSuccess = useCallback((user: User) => {
     setCurrentUser(user);
     setIsAuthenticated(true);
@@ -78,6 +94,9 @@ export function App() {
   }, []);
 
   const handleLogout = useCallback(() => {
+    localStorage.removeItem("sentinel_access_token");
+    localStorage.removeItem("sentinel_refresh_token");
+    localStorage.removeItem("sentinel_user_data");
     setIsAuthenticated(false);
   }, []);
 

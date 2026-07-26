@@ -8,10 +8,12 @@ from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy import (
     Boolean, DateTime, Float, ForeignKey, Index,
-    Integer, String, Text, UniqueConstraint
+    Integer, String, Text, UniqueConstraint, JSON
 )
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+JSON_TYPE = JSON().with_variant(JSONB(), "postgresql")
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin, SoftDeleteMixin
 from app.models.enums import (
@@ -170,7 +172,7 @@ class ComplaintMedia(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         nullable=True,
     )
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    metadata_json: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    metadata_json: Mapped[Optional[dict]] = mapped_column(JSON_TYPE, nullable=True)
 
     complaint: Mapped["Complaint"] = relationship("Complaint", back_populates="media_files")
 
@@ -197,7 +199,7 @@ class ComplaintTimeline(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     actor_name: Mapped[str] = mapped_column(String(255), nullable=False)
     actor_role: Mapped[Optional[str]] = mapped_column(String(30), nullable=True)
     message: Mapped[str] = mapped_column(Text, nullable=False)
-    metadata_json: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    metadata_json: Mapped[Optional[dict]] = mapped_column(JSON_TYPE, nullable=True)
 
     complaint: Mapped["Complaint"] = relationship("Complaint", back_populates="timeline")
 
@@ -292,7 +294,7 @@ class AIAnalysis(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     confidence_score: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
     hotspot_zone: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     recommended_officer_specialty: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    ipc_sections: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True)
+    ipc_sections: Mapped[Optional[list]] = mapped_column(JSON_TYPE, nullable=True)
     ai_summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # Processing metadata

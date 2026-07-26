@@ -275,6 +275,7 @@ class AuthService:
 
     def send_email_otp(self, email: str, purpose: str, request: Request) -> dict:
         """Generate and send 6-digit Email OTP."""
+        from app.services.email_service import email_service
         ip = _get_client_ip(request)
         otp_code = f"{secrets.randbelow(900000) + 100000:06d}"
         expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
@@ -287,6 +288,9 @@ class AuthService:
             ip_address=ip,
         )
         self.db.commit()
+
+        # Send email via EmailService
+        email_service.send_otp_email(email, otp_code, purpose)
 
         logger.info(f"Generated Email OTP for {email} ({purpose}): {otp_code}")
 
@@ -307,7 +311,11 @@ class AuthService:
                 detail="No active OTP found for this email address. Please request a new OTP.",
             )
 
-        if otp_record.expires_at < datetime.now(timezone.utc):
+        exp = otp_record.expires_at
+        if exp and exp.tzinfo is None:
+            exp = exp.replace(tzinfo=timezone.utc)
+
+        if exp and exp < datetime.now(timezone.utc):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="OTP has expired. Please request a new 6-digit OTP.",
@@ -515,7 +523,11 @@ class AuthService:
         """Shared authentication logic for both roles."""
         # Check account lockout
         if user.account_status == AccountStatus.LOCKED:
-            if user.locked_until and datetime.now(timezone.utc) > user.locked_until:
+            locked_until = user.locked_until
+            if locked_until and locked_until.tzinfo is None:
+                locked_until = locked_until.replace(tzinfo=timezone.utc)
+
+            if locked_until and datetime.now(timezone.utc) > locked_until:
                 # Auto-unlock if lockout period expired
                 self.user_repo.unlock_account(user)
             else:

@@ -22,9 +22,10 @@ def _error_response(
     error_code: str = None,
     details=None,
 ) -> JSONResponse:
-    """Build a standardized error JSON response."""
+    """Build a standardized error JSON response with CORS headers."""
     return JSONResponse(
         status_code=status_code,
+        headers={"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*"},
         content={
             "success": False,
             "message": message,

@@ -51,7 +51,11 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "http://localhost:5173",
         "http://localhost:8080",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:3000",
+        "https://sentinel-ai-platform.vercel.app",
         "https://sentinel.gov.in",
+        "*",
     ]
     ALLOWED_METHODS: List[str] = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
     ALLOWED_HEADERS: List[str] = ["*"]
@@ -85,6 +89,8 @@ class Settings(BaseSettings):
     DUPLICATE_DETECTION_THRESHOLD: float = 0.82  # cosine similarity threshold
 
     # ─── Email (OTP/Verification) ────────────────────────────────────────────────
+    RESEND_API_KEY: Optional[str] = None
+    SENDGRID_API_KEY: Optional[str] = None
     SMTP_HOST: Optional[str] = None
     SMTP_PORT: int = 587
     SMTP_USER: Optional[str] = None

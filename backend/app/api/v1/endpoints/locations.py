@@ -91,7 +91,7 @@ def update_patrol_unit(
     if not unit:
         raise HTTPException(status_code=404, detail="Patrol unit not found.")
 
-    update_data = {k: v for k, v in payload.dict().items() if v is not None}
+    update_data = {k: v for k, v in payload.model_dump().items() if v is not None}
     repo.update_patrol_unit(unit, **update_data)
     db.commit()
     return {"success": True, "message": "Patrol unit updated."}

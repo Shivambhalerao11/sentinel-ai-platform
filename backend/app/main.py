@@ -34,9 +34,17 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         environment=settings.APP_ENV,
     )
 
-    # Verify database connection
+    # Verify database connection and auto-create tables
     if check_db_connection():
         logger.info("Database connection verified")
+        try:
+            from app.db.base import Base
+            from app.db.session import engine
+            import app.models  # Ensure all SQLAlchemy models are registered
+            Base.metadata.create_all(bind=engine)
+            logger.info("Database schema & tables created/verified successfully.")
+        except Exception as e:
+            logger.error("Database schema creation failed", error=str(e))
     else:
         logger.warning(
             "Database connection FAILED. "

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback, memo } from "react";
 import { FileText, Search, UserCheck, Sparkles, MapPin, Send } from "lucide-react";
 import { Complaint, ComplaintStatus, PoliceStation, PatrolUnit } from "../types";
 import { updateComplaintStatus, addOfficerNote } from "../services/api";
@@ -40,37 +40,59 @@ export const CaseManagement: React.FC<Props> = ({
   const row = dark ? "bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)]"
                    : "bg-[#F8FAFC] border border-[#E2E8F0]";
 
-  const filtered = complaints.filter(c => {
-    if (search) {
-      const q = search.toLowerCase();
-      if (![c.id, c.title, c.citizenName, c.address].some(f => f?.toLowerCase().includes(q))) return false;
-    }
-    if (statusF   !== "ALL" && c.status        !== statusF)   return false;
-    if (priorityF !== "ALL" && c.priority       !== priorityF) return false;
-    if (categoryF !== "ALL" && c.crimeCategory  !== categoryF) return false;
-    return true;
-  });
+  // ── Memoized filter — only recomputes when complaints or filter values change ──
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase();
+    return complaints.filter(c => {
+      if (q && ![c.id, c.title, c.citizenName, c.address].some(f => f?.toLowerCase().includes(q))) return false;
+      if (statusF   !== "ALL" && c.status       !== statusF)   return false;
+      if (priorityF !== "ALL" && c.priority      !== priorityF) return false;
+      if (categoryF !== "ALL" && c.crimeCategory !== categoryF) return false;
+      return true;
+    });
+  }, [complaints, search, statusF, priorityF, categoryF]);
 
-  const updateCase = async () => {
+  // ── Stable selected-complaint array for GisMap — avoids marker redraw on unrelated renders ──
+  const selectedArr = useMemo(
+    () => (selected ? [selected] : []),
+    [selected]
+  );
+
+  // ── Memoized handlers — stable references prevent child re-renders ──
+  const handleSelectCase = useCallback((c: Complaint) => setSelected(c), []);
+
+  const updateCase = useCallback(async () => {
     if (!selected) return;
     setSubmitting(true);
     try {
-      await updateComplaintStatus(selected.id, { status: newStatus, officerId: officer, note: note || undefined, actor: "Inspector C. Sterling" });
-      setNote(""); onRefresh();
+      await updateComplaintStatus(selected.id, {
+        status: newStatus,
+        officerId: officer,
+        note: note || undefined,
+        actor: "Inspector C. Sterling",
+      });
+      setNote("");
+      onRefresh();
       alert(`Case ${selected.id} → ${newStatus}`);
     } catch (e: any) { alert(e.message); }
     finally { setSubmitting(false); }
-  };
+  }, [selected, newStatus, officer, note, onRefresh]);
 
-  const addNote = async () => {
+  const addNote = useCallback(async () => {
     if (!selected || !note.trim()) return;
     setSubmitting(true);
     try {
-      await addOfficerNote(selected.id, { note: note.trim(), officerName: "Inspector C. Sterling", badgeNumber: "IND-POL-8841" });
-      setNote(""); onRefresh(); alert("Note recorded.");
+      await addOfficerNote(selected.id, {
+        note: note.trim(),
+        officerName: "Inspector C. Sterling",
+        badgeNumber: "IND-POL-8841",
+      });
+      setNote("");
+      onRefresh();
+      alert("Note recorded.");
     } catch (e: any) { alert(e.message); }
     finally { setSubmitting(false); }
-  };
+  }, [selected, note, onRefresh]);
 
   return (
     <PageShell dark={dark} motifs maxWidth="1600px">
@@ -126,7 +148,7 @@ export const CaseManagement: React.FC<Props> = ({
                 : filtered.map(c => {
                   const isSelected = selected?.id === c.id;
                   return (
-                    <div key={c.id} onClick={() => setSelected(c)}
+                    <div key={c.id} onClick={() => handleSelectCase(c)}
                       className={`p-4 cursor-pointer space-y-1.5 transition-all ${isSelected
                         ? dark ? "bg-[rgba(212,175,55,0.07)] border-l-4 border-l-amber-400" : "bg-blue-50/60 border-l-4 border-l-[#163A70]"
                         : dark ? "hover:bg-[rgba(255,255,255,0.04)]" : "hover:bg-[#F8FAFC]"}`}>
@@ -191,7 +213,7 @@ export const CaseManagement: React.FC<Props> = ({
             <Card variant={dark ? "elevated" : "default"} dark={dark} padding="md">
               <SectionHeader dark={dark} icon={<MapPin className="w-3.5 h-3.5 text-blue-500" />} title="Incident Location" />
               <div className="h-52 rounded-xl overflow-hidden">
-                <GisMap complaints={[selected]} stations={stations} patrolUnits={patrolUnits}
+                <GisMap complaints={selectedArr} stations={stations} patrolUnits={patrolUnits}
                   initialLat={selected.latitude} initialLng={selected.longitude} />
               </div>
             </Card>

@@ -1,17 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, memo, useCallback } from "react";
 import L from "leaflet";
 import {
-  MapPin,
-  Layers,
-  Shield,
-  Radio,
-  Car,
-  Flame,
-  Filter,
-  Eye,
-  Maximize2,
-  Minimize2,
-  RefreshCw,
+  MapPin, Layers, Shield, Radio, Car, Flame, Filter, Eye, Maximize2, Minimize2, RefreshCw,
 } from "lucide-react";
 import { Complaint, PoliceStation, PatrolUnit } from "../types";
 import { Select } from "../design";
@@ -27,7 +17,7 @@ interface GisMapProps {
   initialLng?: number;
 }
 
-export const GisMap: React.FC<GisMapProps> = ({
+export const GisMap: React.FC<GisMapProps> = memo(({
   complaints,
   stations,
   patrolUnits,
@@ -366,4 +356,6 @@ export const GisMap: React.FC<GisMapProps> = ({
       </div>
     </div>
   );
-};
+});
+
+GisMap.displayName = "GisMap";

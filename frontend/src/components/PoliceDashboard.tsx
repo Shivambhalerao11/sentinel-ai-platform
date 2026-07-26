@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback, memo } from "react";
 import { Radio, ChevronRight, Sparkles } from "lucide-react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { Complaint, AnalyticsSummary, PoliceStation, PatrolUnit } from "../types";
@@ -18,7 +18,7 @@ interface Props {
   themeMode?: "light" | "dark";
 }
 
-export const PoliceDashboard: React.FC<Props> = ({
+export const PoliceDashboard: React.FC<Props> = memo(({
   complaints, stations, patrolUnits,
   onOpenCase, onOpenSos, onNavigateToTab, themeMode = "light",
 }) => {
@@ -26,7 +26,24 @@ export const PoliceDashboard: React.FC<Props> = ({
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
   useEffect(() => { fetchAnalytics().then(setAnalytics).catch(() => {}); }, []);
 
-  const emergency = complaints.filter(c => c.isEmergency || c.priority === "CRITICAL");
+  // Memoized — only recomputes when complaints array changes
+  const emergency = useMemo(
+    () => complaints.filter(c => c.isEmergency || c.priority === "CRITICAL"),
+    [complaints]
+  );
+
+  // Stable callbacks — prevent child re-renders from new function refs
+  const handleOpenFirstEmergency = useCallback(
+    () => { if (emergency[0]) onOpenCase(emergency[0]); },
+    [emergency, onOpenCase]
+  );
+  const handleOpenCase = useCallback(
+    (c: Complaint) => onOpenCase(c),
+    [onOpenCase]
+  );
+  const handleNavAnalytics = useCallback(() => onNavigateToTab("analytics"), [onNavigateToTab]);
+  const handleNavGis       = useCallback(() => onNavigateToTab("gis"),       [onNavigateToTab]);
+
   const txt  = dark ? "text-white"    : "text-[#0F172A]";
   const sub  = dark ? "text-slate-400" : "text-[#475569]";
 
@@ -51,7 +68,7 @@ export const PoliceDashboard: React.FC<Props> = ({
               <p className="text-[11px] text-red-200 font-mono">{emergency[0].address}</p>
             </div>
           </div>
-          <Button variant="gold" size="sm" onClick={() => onOpenCase(emergency[0])}>
+          <Button variant="gold" size="sm" onClick={handleOpenFirstEmergency}>
             Open Incident Command
           </Button>
         </div>
@@ -76,7 +93,7 @@ export const PoliceDashboard: React.FC<Props> = ({
             <SectionHeader dark={dark} title="Predictive Density Analysis"
               subtitle="Stochastic crime modeling · Temporal variance ±4.2%"
               action={
-                <button onClick={() => onNavigateToTab("analytics")}
+                <button onClick={handleNavAnalytics}
                   className={`text-xs font-bold flex items-center space-x-1 cursor-pointer transition-colors ${dark ? "text-amber-400 hover:text-amber-300" : "text-[#2563EB] hover:text-[#1d4ed8]"}`}>
                   <span>Full AI Insights</span>
                   <ChevronRight className="w-3.5 h-3.5" />
@@ -143,13 +160,13 @@ export const PoliceDashboard: React.FC<Props> = ({
                 <Radio className="w-3.5 h-3.5 text-red-500 animate-pulse" />
                 <span className={`text-[11px] font-black uppercase ${txt}`}>GIS Tactical Feed</span>
               </div>
-              <button onClick={() => onNavigateToTab("gis")}
+              <button onClick={handleNavGis}
                 className={`text-[11px] font-bold cursor-pointer transition-colors ${dark ? "text-amber-400 hover:text-amber-300" : "text-[#2563EB] hover:text-[#1d4ed8]"}`}>
                 Expand ↗
               </button>
             </div>
             <div className="h-56 rounded-xl overflow-hidden">
-              <GisMap complaints={complaints} stations={stations} patrolUnits={patrolUnits} onSelectComplaint={onOpenCase} />
+              <GisMap complaints={complaints} stations={stations} patrolUnits={patrolUnits} onSelectComplaint={handleOpenCase} />
             </div>
           </Card>
 
@@ -157,7 +174,7 @@ export const PoliceDashboard: React.FC<Props> = ({
             <SectionHeader dark={dark} title="Field Activity" subtitle="Latest cases · Priority sorted" />
             <div className="space-y-2 max-h-72 overflow-y-auto">
               {complaints.slice(0, 4).map(c => (
-                <div key={c.id} onClick={() => onOpenCase(c)}
+                <div key={c.id} onClick={() => handleOpenCase(c)}
                   className={`p-3 rounded-xl cursor-pointer transition-all space-y-1 ${dark ? "bg-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.07)] border border-[rgba(255,255,255,0.05)]" : "bg-[#F8FAFC] hover:bg-blue-50/40 border border-[#E2E8F0]"}`}>
                   <div className="flex items-center justify-between text-[10px] font-mono">
                     <span className="font-black text-[#163A70] dark:text-amber-400">{c.id}</span>
@@ -178,4 +195,6 @@ export const PoliceDashboard: React.FC<Props> = ({
       </div>
     </PageShell>
   );
-};
+});
+
+PoliceDashboard.displayName = "PoliceDashboard";

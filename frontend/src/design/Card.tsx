@@ -1,5 +1,4 @@
 import React, { memo } from "react";
-import { useTheme } from "../context/ThemeContext";
 
 type CardVariant = "default" | "elevated" | "glass" | "command" | "critical" | "gold";
 
@@ -47,13 +46,16 @@ const PADDING_STYLES = {
   lg:   "p-5 md:p-6",
 };
 
+/**
+ * Card — no useTheme() call here.
+ * Caller always passes `dark` prop explicitly, so context subscription is unnecessary.
+ * This prevents every Card from re-rendering on theme change.
+ */
 export const Card: React.FC<CardProps> = memo(({
   children, variant = "default", className = "",
-  onClick, hover = !!onClick, padding = "md", dark,
+  onClick, hover = !!onClick, padding = "md", dark = false,
 }) => {
-  const { themeMode } = useTheme();
-  const isDark = dark !== undefined ? dark : themeMode === "dark";
-  const variantClass = VARIANT_STYLES[variant][isDark ? "dark" : "light"];
+  const variantClass = VARIANT_STYLES[variant][dark ? "dark" : "light"];
   const paddingClass = PADDING_STYLES[padding];
   const hoverClass   = hover
     ? "transition-all duration-200 cursor-pointer hover:scale-[1.01] hover:shadow-[0_8px_32px_rgba(7,17,30,0.14)]"
@@ -75,7 +77,7 @@ export const Card: React.FC<CardProps> = memo(({
 Card.displayName = "Card";
 
 /**
- * SectionHeader – Consistent section title used inside pages.
+ * SectionHeader — accepts dark prop directly, no context subscription.
  */
 export const SectionHeader: React.FC<{
   icon?: React.ReactNode;
@@ -83,38 +85,39 @@ export const SectionHeader: React.FC<{
   subtitle?: string;
   action?: React.ReactNode;
   dark?: boolean;
-}> = ({ icon, title, subtitle, action, dark }) => {
-  const { themeMode } = useTheme();
-  const isDark = dark !== undefined ? dark : themeMode === "dark";
-
-  return (
-    <div className="flex flex-wrap items-start justify-between gap-3 pb-4 mb-5 border-b"
-      style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "#E2E8F0" }}>
-      <div className="flex items-center space-x-2.5">
-        {icon && (
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-            style={{ background: isDark ? "rgba(212,175,55,0.12)" : "rgba(22,58,112,0.08)" }}>
-            {icon}
-          </div>
-        )}
-        <div>
-          <h1 className={`text-base font-black uppercase tracking-tight font-sans ${isDark ? "text-white" : "text-[#0F172A]"}`}>
-            {title}
-          </h1>
-          {subtitle && (
-            <p className={`text-[11px] font-mono mt-0.5 ${isDark ? "text-slate-400" : "text-[#475569]"}`}>
-              {subtitle}
-            </p>
-          )}
+}> = memo(({ icon, title, subtitle, action, dark = false }) => (
+  <div
+    className="flex flex-wrap items-start justify-between gap-3 pb-4 mb-5 border-b"
+    style={{ borderColor: dark ? "rgba(255,255,255,0.08)" : "#E2E8F0" }}
+  >
+    <div className="flex items-center space-x-2.5">
+      {icon && (
+        <div
+          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+          style={{ background: dark ? "rgba(212,175,55,0.12)" : "rgba(22,58,112,0.08)" }}
+        >
+          {icon}
         </div>
+      )}
+      <div>
+        <h1 className={`text-base font-black uppercase tracking-tight font-sans ${dark ? "text-white" : "text-[#0F172A]"}`}>
+          {title}
+        </h1>
+        {subtitle && (
+          <p className={`text-[11px] font-mono mt-0.5 ${dark ? "text-slate-400" : "text-[#475569]"}`}>
+            {subtitle}
+          </p>
+        )}
       </div>
-      {action && <div>{action}</div>}
     </div>
-  );
-};
+    {action && <div>{action}</div>}
+  </div>
+));
+
+SectionHeader.displayName = "SectionHeader";
 
 /**
- * KpiCard – Metric display card used in dashboards.
+ * KpiCard — accepts dark prop directly, no context subscription.
  */
 export const KpiCard: React.FC<{
   label: string;
@@ -122,10 +125,7 @@ export const KpiCard: React.FC<{
   sub?: string;
   accent?: "blue" | "red" | "green" | "gold" | "neutral";
   dark?: boolean;
-}> = ({ label, value, sub, accent = "neutral", dark }) => {
-  const { themeMode } = useTheme();
-  const isDark = dark !== undefined ? dark : themeMode === "dark";
-
+}> = memo(({ label, value, sub, accent = "neutral", dark = false }) => {
   const accentColors = {
     blue:    { border: "#2563EB", text: "#163A70", bg: "#EFF6FF" },
     red:     { border: "#DC2626", text: "#DC2626", bg: "#FEF2F2" },
@@ -136,32 +136,34 @@ export const KpiCard: React.FC<{
 
   return (
     <div
-      className={`rounded-2xl overflow-hidden p-4 border-l-4 transition-all duration-200 ${isDark ? "bg-[#0F2340] border border-r border-t border-b" : "bg-white border border-r border-t border-b"}`}
+      className={`rounded-2xl overflow-hidden p-4 border-l-4 transition-all duration-200 ${dark ? "bg-[#0F2340] border border-r border-t border-b" : "bg-white border border-r border-t border-b"}`}
       style={{
-        borderLeftColor: accentColors.border,
-        borderRightColor: isDark ? "rgba(255,255,255,0.07)" : "#E2E8F0",
-        borderTopColor:   isDark ? "rgba(255,255,255,0.07)" : "#E2E8F0",
-        borderBottomColor:isDark ? "rgba(255,255,255,0.07)" : "#E2E8F0",
-        background: isDark ? undefined : accentColors.bg,
+        borderLeftColor:   accentColors.border,
+        borderRightColor:  dark ? "rgba(255,255,255,0.07)" : "#E2E8F0",
+        borderTopColor:    dark ? "rgba(255,255,255,0.07)" : "#E2E8F0",
+        borderBottomColor: dark ? "rgba(255,255,255,0.07)" : "#E2E8F0",
+        background: dark ? undefined : accentColors.bg,
         boxShadow: "0 2px 12px rgba(7,17,30,0.07)",
       }}
     >
-      <p className={`text-[10px] uppercase font-bold tracking-widest font-mono ${isDark ? "text-slate-400" : "text-[#475569]"}`}>
+      <p className={`text-[10px] uppercase font-bold tracking-widest font-mono ${dark ? "text-slate-400" : "text-[#475569]"}`}>
         {label}
       </p>
       <div className="flex items-baseline space-x-2 mt-1.5">
         <span
           className="text-2xl font-black font-mono tabular-nums"
-          style={{ color: isDark ? "white" : accentColors.text }}
+          style={{ color: dark ? "white" : accentColors.text }}
         >
           {value}
         </span>
         {sub && (
-          <span className={`text-[11px] font-bold font-mono ${isDark ? "text-slate-400" : "text-[#64748B]"}`}>
+          <span className={`text-[11px] font-bold font-mono ${dark ? "text-slate-400" : "text-[#64748B]"}`}>
             {sub}
           </span>
         )}
       </div>
     </div>
   );
-};
+});
+
+KpiCard.displayName = "KpiCard";

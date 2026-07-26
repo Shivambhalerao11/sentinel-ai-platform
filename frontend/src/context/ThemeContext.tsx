@@ -1,4 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext, useCallback, useContext,
+  useEffect, useMemo, useState,
+} from "react";
 
 export type ThemeMode = "light" | "dark";
 
@@ -16,20 +19,27 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const saved = localStorage.getItem("sentinel_theme");
       if (saved === "light" || saved === "dark") return saved;
     } catch {}
-    return "dark"; // Default to dark Government-inspired theme
+    return "dark";
   });
 
-  const setThemeMode = (mode: ThemeMode) => {
+  // Stable reference — does not change between renders
+  const setThemeMode = useCallback((mode: ThemeMode) => {
     setThemeModeState(mode);
     try {
       localStorage.setItem("sentinel_theme", mode);
     } catch {}
-  };
+  }, []);
 
-  const toggleTheme = () => {
-    setThemeMode(themeMode === "dark" ? "light" : "dark");
-  };
+  // Stable reference — depends only on setThemeMode (itself stable)
+  const toggleTheme = useCallback(() => {
+    setThemeModeState(prev => {
+      const next = prev === "dark" ? "light" : "dark";
+      try { localStorage.setItem("sentinel_theme", next); } catch {}
+      return next;
+    });
+  }, []);
 
+  // Apply class to <html> element — runs only when themeMode changes
   useEffect(() => {
     const root = document.documentElement;
     if (themeMode === "dark") {
@@ -41,8 +51,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [themeMode]);
 
+  // Memoized context value — only changes when themeMode changes
+  const value = useMemo<ThemeContextType>(
+    () => ({ themeMode, toggleTheme, setThemeMode }),
+    [themeMode, toggleTheme, setThemeMode]
+  );
+
   return (
-    <ThemeContext.Provider value={{ themeMode, toggleTheme, setThemeMode }}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );
@@ -51,7 +67,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 export const useTheme = (): ThemeContextType => {
   const context = useContext(ThemeContext);
   if (!context) {
-    // Fallback if rendered outside ThemeProvider
+    // Safe fallback outside provider
     return {
       themeMode: "dark",
       toggleTheme: () => {},

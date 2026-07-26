@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     SECRET_KEY: str = secrets.token_urlsafe(64)
     API_V1_STR: str = "/api/v1"
+    PORT: int = 8000
 
     # ─── Database ────────────────────────────────────────────────────────────────
     DATABASE_URL: str = "postgresql://sentinel:sentinel_pass@localhost:5432/sentinel_db"

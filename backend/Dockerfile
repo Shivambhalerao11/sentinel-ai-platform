@@ -43,13 +43,12 @@ RUN mkdir -p uploads/images uploads/videos uploads/documents logs && \
 # Switch to non-root user
 USER sentinel
 
-# Expose port
+# Expose port (default 8000 for local container runs)
 EXPOSE 8000
 
-# Health check
+# Health check using dynamic PORT environment variable provided by platform
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
-# Start command: run migrations first, then start the server.
-# Uses 1 worker on Render free tier to avoid OOM. Increase for paid tiers.
-CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 1 --loop asyncio --access-log"]
+# Start command: bind to host 0.0.0.0 and dynamic $PORT provided by Render
+CMD ["sh", "-c", "PORT=${PORT:-8000}; exec uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1 --loop asyncio --access-log"]

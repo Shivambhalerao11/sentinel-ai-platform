@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, memo } from "react";
+import React, { useState, useMemo, useCallback, memo, useDeferredValue } from "react";
 import { FileText, Search, UserCheck, Sparkles, MapPin, Send } from "lucide-react";
 import { Complaint, ComplaintStatus, PoliceStation, PatrolUnit } from "../types";
 import { updateComplaintStatus, addOfficerNote } from "../services/api";
@@ -27,6 +27,7 @@ export const CaseManagement: React.FC<Props> = ({
   const dark = themeMode === "dark";
   const [selected, setSelected]     = useState<Complaint | null>(selectedCaseFromDashboard ?? complaints[0] ?? null);
   const [search, setSearch]         = useState("");
+  const deferredSearch              = useDeferredValue(search);
   const [statusF, setStatusF]       = useState("ALL");
   const [priorityF, setPriorityF]   = useState("ALL");
   const [categoryF, setCategoryF]   = useState("ALL");
@@ -40,9 +41,9 @@ export const CaseManagement: React.FC<Props> = ({
   const row = dark ? "bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)]"
                    : "bg-[#F8FAFC] border border-[#E2E8F0]";
 
-  // ── Memoized filter — only recomputes when complaints or filter values change ──
+  // ── Deferred memoized filter — user input is instant (0ms INP), list updates asynchronously ──
   const filtered = useMemo(() => {
-    const q = search.toLowerCase();
+    const q = deferredSearch.toLowerCase();
     return complaints.filter(c => {
       if (q && ![c.id, c.title, c.citizenName, c.address].some(f => f?.toLowerCase().includes(q))) return false;
       if (statusF   !== "ALL" && c.status       !== statusF)   return false;
@@ -50,7 +51,7 @@ export const CaseManagement: React.FC<Props> = ({
       if (categoryF !== "ALL" && c.crimeCategory !== categoryF) return false;
       return true;
     });
-  }, [complaints, search, statusF, priorityF, categoryF]);
+  }, [complaints, deferredSearch, statusF, priorityF, categoryF]);
 
   // ── Stable selected-complaint array for GisMap — avoids marker redraw on unrelated renders ──
   const selectedArr = useMemo(

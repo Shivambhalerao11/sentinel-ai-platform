@@ -251,6 +251,10 @@ const ParticleCanvas: React.FC<Props> = memo(({ phase, phaseProgress, mouseX, mo
 
     const animate = () => {
       frameRef.current = requestAnimationFrame(animate);
+
+      // Skip frame processing if tab/document is backgrounded or hidden
+      if (document.hidden) return;
+
       const t = clockRef.current.getElapsedTime();
 
       const animPhase    = phaseRef.current;

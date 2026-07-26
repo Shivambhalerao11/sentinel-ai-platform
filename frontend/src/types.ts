@@ -28,7 +28,7 @@ export interface User {
   full_name: string;
   name?: string; // alias kept for backward compat, maps to full_name
   email: string;
-  phone: string;
+  phone?: string; // Optional — backend UserPublicOut returns Optional[str]
   role: UserRole;
   employeeId?: string;
   employee_id?: string;
@@ -118,7 +118,7 @@ export interface Complaint {
   createdAt: string;
   updatedAt: string;
   timeline: TimelineEvent[];
-  aiAnalysis: AIAnalysis;
+  aiAnalysis?: AIAnalysis | null; // Optional — AI may not have run yet
   officerNotes: OfficerNote[];
 }
 

@@ -385,40 +385,46 @@ export const CitizenView: React.FC<CitizenViewProps> = ({
                   <span>SENTINEL AI TRIAGE & DISPATCH ASSESSMENT</span>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs font-mono-data">
-                  <div className="bg-white p-2.5 rounded border border-[#E2E8F0]">
-                    <span className="text-[10px] text-slate-500">CATEGORY</span>
-                    <p className="font-bold text-[#0F172A]">{submittedComplaint.aiAnalysis.category}</p>
-                  </div>
+                {submittedComplaint.aiAnalysis ? (
+                  <>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs font-mono-data">
+                      <div className="bg-white p-2.5 rounded border border-[#E2E8F0]">
+                        <span className="text-[10px] text-slate-500">CATEGORY</span>
+                        <p className="font-bold text-[#0F172A]">{submittedComplaint.aiAnalysis.category}</p>
+                      </div>
 
-                  <div className="bg-white p-2.5 rounded border border-[#E2E8F0]">
-                    <span className="text-[10px] text-slate-500">PRIORITY</span>
-                    <p
-                      className={`font-extrabold ${
-                        submittedComplaint.aiAnalysis.priority === "CRITICAL"
-                          ? "text-red-600"
-                          : "text-amber-600"
-                      }`}
-                    >
-                      {submittedComplaint.aiAnalysis.priority}
-                    </p>
-                  </div>
+                      <div className="bg-white p-2.5 rounded border border-[#E2E8F0]">
+                        <span className="text-[10px] text-slate-500">PRIORITY</span>
+                        <p
+                          className={`font-extrabold ${
+                            submittedComplaint.aiAnalysis.priority === "CRITICAL"
+                              ? "text-red-600"
+                              : "text-amber-600"
+                          }`}
+                        >
+                          {submittedComplaint.aiAnalysis.priority}
+                        </p>
+                      </div>
 
-                  <div className="bg-white p-2.5 rounded border border-[#E2E8F0]">
-                    <span className="text-[10px] text-slate-500">NEAREST STATION</span>
-                    <p className="font-bold text-[#0F172A]">{submittedComplaint.aiAnalysis.nearestStation}</p>
-                  </div>
+                      <div className="bg-white p-2.5 rounded border border-[#E2E8F0]">
+                        <span className="text-[10px] text-slate-500">NEAREST STATION</span>
+                        <p className="font-bold text-[#0F172A]">{submittedComplaint.aiAnalysis.nearestStation}</p>
+                      </div>
 
-                  <div className="bg-white p-2.5 rounded border border-[#E2E8F0]">
-                    <span className="text-[10px] text-slate-500">ESTIMATED RESPONSE</span>
-                    <p className="font-bold text-emerald-600">{submittedComplaint.aiAnalysis.estimatedResponseTime}</p>
-                  </div>
-                </div>
+                      <div className="bg-white p-2.5 rounded border border-[#E2E8F0]">
+                        <span className="text-[10px] text-slate-500">ESTIMATED RESPONSE</span>
+                        <p className="font-bold text-emerald-600">{submittedComplaint.aiAnalysis.estimatedResponseTime}</p>
+                      </div>
+                    </div>
 
-                <div className="bg-white p-3 rounded border border-[#E2E8F0] text-xs">
-                  <p className="font-bold text-[#0F172A] mb-1">Suggested Police Response Action Plan:</p>
-                  <p className="text-[#475569]">{submittedComplaint.aiAnalysis.suggestedAction}</p>
-                </div>
+                    <div className="bg-white p-3 rounded border border-[#E2E8F0] text-xs">
+                      <p className="font-bold text-[#0F172A] mb-1">Suggested Police Response Action Plan:</p>
+                      <p className="text-[#475569]">{submittedComplaint.aiAnalysis.suggestedAction}</p>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-xs text-slate-500 italic">AI triage is processing. Results will appear shortly.</p>
+                )}
               </div>
 
               <div className="flex justify-between items-center pt-2">

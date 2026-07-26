@@ -249,9 +249,17 @@ def seed_users(db: Session, stations: list) -> list:
 
 
 def run_seed() -> None:
-    """Run all seed operations."""
+    """Run all seed operations. Safe to call multiple times — all inserts are idempotent."""
     db = SessionLocal()
     try:
+        # Quick sanity check: if the users table doesn't exist yet, skip seeding.
+        # This can happen if migrations haven't run yet (e.g., first boot race condition).
+        from sqlalchemy import inspect
+        inspector = inspect(db.bind)
+        if "users" not in inspector.get_table_names():
+            logger.warning("Seed skipped: 'users' table does not exist yet. Run alembic upgrade head first.")
+            return
+
         logger.info("Starting database seed...")
         seed_districts(db)
         stations = seed_stations(db)

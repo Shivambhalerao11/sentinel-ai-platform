@@ -1,11 +1,19 @@
 """
 Core application configuration using Pydantic Settings.
 All values loaded from environment variables with sensible defaults for development.
+
+CORS FIX: ALLOWED_ORIGINS accepts EITHER:
+  - A JSON array string:  '["https://x.vercel.app","http://localhost:5173"]'
+  - A comma-separated string: "https://x.vercel.app,http://localhost:5173"
+  - A Python list (when running in tests)
+This handles all deployment environments (Render, Docker, local) safely.
 """
-from typing import List, Optional
-from pydantic_settings import BaseSettings
-from pydantic import field_validator
+import json
 import secrets
+from typing import List, Optional, Union
+
+from pydantic import field_validator
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -19,10 +27,10 @@ class Settings(BaseSettings):
 
     # ─── Database ────────────────────────────────────────────────────────────────
     DATABASE_URL: str = "postgresql://sentinel:sentinel_pass@localhost:5432/sentinel_db"
-    DATABASE_POOL_SIZE: int = 10
-    DATABASE_MAX_OVERFLOW: int = 20
+    DATABASE_POOL_SIZE: int = 5      # Lower for Render free tier
+    DATABASE_MAX_OVERFLOW: int = 10
     DATABASE_POOL_TIMEOUT: int = 30
-    DATABASE_ECHO: bool = False  # Set True to log all SQL queries
+    DATABASE_ECHO: bool = False      # Set True to log all SQL queries
 
     # ─── JWT Authentication ───────────────────────────────────────────────────────
     JWT_SECRET_KEY: str = secrets.token_urlsafe(64)
@@ -37,7 +45,9 @@ class Settings(BaseSettings):
     BCRYPT_ROUNDS: int = 12
 
     # ─── CORS ────────────────────────────────────────────────────────────────────
-    ALLOWED_ORIGINS: List[str] = [
+    # Accepts JSON array, comma-separated string, or Python list.
+    # Example Render env var value: https://myapp.vercel.app,http://localhost:5173
+    ALLOWED_ORIGINS: Union[List[str], str] = [
         "http://localhost:3000",
         "http://localhost:5173",
         "http://localhost:8080",
@@ -98,11 +108,13 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     LOG_FILE: str = "logs/sentinel.log"
 
+    # ─── Validators ──────────────────────────────────────────────────────────────
+
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def assemble_db_url(cls, v: str) -> str:
-        # Replace postgres:// with postgresql:// for SQLAlchemy 2.x compatibility
-        if v.startswith("postgres://"):
+        """Normalize postgres:// -> postgresql:// for SQLAlchemy 2.x."""
+        if isinstance(v, str) and v.startswith("postgres://"):
             return v.replace("postgres://", "postgresql://", 1)
         return v
 
@@ -110,9 +122,35 @@ class Settings(BaseSettings):
     @classmethod
     def validate_env(cls, v: str) -> str:
         valid = {"development", "staging", "production"}
-        if v not in valid:
-            raise ValueError(f"APP_ENV must be one of {valid}")
+        if isinstance(v, str) and v not in valid:
+            # Don't crash — fall back to development
+            return "development"
         return v
+
+    @field_validator("ALLOWED_ORIGINS", mode="before")
+    @classmethod
+    def parse_allowed_origins(cls, v) -> List[str]:
+        """
+        Parse ALLOWED_ORIGINS from multiple formats:
+        - Already a list: return as-is
+        - JSON array string: '["https://x.vercel.app", "http://localhost:5173"]'
+        - Comma-separated string: "https://x.vercel.app,http://localhost:5173"
+        """
+        if isinstance(v, list):
+            return [str(o).strip() for o in v if str(o).strip()]
+        if isinstance(v, str):
+            stripped = v.strip()
+            # Try JSON array first
+            if stripped.startswith("["):
+                try:
+                    parsed = json.loads(stripped)
+                    if isinstance(parsed, list):
+                        return [str(o).strip() for o in parsed if str(o).strip()]
+                except json.JSONDecodeError:
+                    pass
+            # Fall back to comma-separated
+            return [o.strip() for o in stripped.split(",") if o.strip()]
+        return []
 
     class Config:
         env_file = ".env"

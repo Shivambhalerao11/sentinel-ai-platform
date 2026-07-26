@@ -201,32 +201,38 @@ export const CaseManagement: React.FC<Props> = ({
               <div className="flex items-center space-x-2 mb-3">
                 <Sparkles className="w-4 h-4 text-amber-500" />
                 <span className={`text-[11px] font-black uppercase tracking-wider ${dark ? "text-amber-300" : "text-amber-800"}`}>
-                  SENTINEL AI ASSESSMENT · {selected.aiAnalysis.confidenceScore}% Confidence
+                  SENTINEL AI ASSESSMENT{selected.aiAnalysis ? ` · ${selected.aiAnalysis.confidenceScore}% Confidence` : ""}
                 </span>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
-                {[
-                  { label: "Fake Prob",  val: `${selected.aiAnalysis.fakeProbability}%` },
-                  { label: "Duplicate", val: selected.aiAnalysis.isDuplicate ? "YES" : "NO" },
-                  { label: "Specialty", val: selected.aiAnalysis.recommendedOfficerSpecialty ?? "General" },
-                  { label: "Response",  val: selected.aiAnalysis.estimatedResponseTime },
-                ].map(m => (
-                  <div key={m.label} className={`p-2.5 rounded-xl text-xs ${dark ? "bg-[rgba(0,0,0,0.3)] border border-[rgba(255,255,255,0.07)]" : "bg-white border border-amber-200/60"}`}>
-                    <p className={`text-[10px] font-mono ${sub}`}>{m.label}</p>
-                    <p className={`font-black ${txt}`}>{m.val}</p>
+              {selected.aiAnalysis ? (
+                <>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+                    {[
+                      { label: "Fake Prob",  val: `${selected.aiAnalysis.fakeProbability}%` },
+                      { label: "Duplicate", val: selected.aiAnalysis.isDuplicate ? "YES" : "NO" },
+                      { label: "Specialty", val: selected.aiAnalysis.recommendedOfficerSpecialty ?? "General" },
+                      { label: "Response",  val: selected.aiAnalysis.estimatedResponseTime },
+                    ].map(m => (
+                      <div key={m.label} className={`p-2.5 rounded-xl text-xs ${dark ? "bg-[rgba(0,0,0,0.3)] border border-[rgba(255,255,255,0.07)]" : "bg-white border border-amber-200/60"}`}>
+                        <p className={`text-[10px] font-mono ${sub}`}>{m.label}</p>
+                        <p className={`font-black ${txt}`}>{m.val}</p>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-              {selected.aiAnalysis.ipcSections?.length && (
-                <div className="flex flex-wrap gap-1.5 mb-3">
-                  {selected.aiAnalysis.ipcSections.map((s, i) => (
-                    <span key={i} className="bg-[#163A70] text-white text-[9px] font-mono font-black px-2 py-0.5 rounded">{s}</span>
-                  ))}
-                </div>
+                  {selected.aiAnalysis.ipcSections?.length && (
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                      {selected.aiAnalysis.ipcSections.map((s, i) => (
+                        <span key={i} className="bg-[#163A70] text-white text-[9px] font-mono font-black px-2 py-0.5 rounded">{s}</span>
+                      ))}
+                    </div>
+                  )}
+                  <p className={`text-xs leading-relaxed ${dark ? "text-slate-300" : "text-slate-700"}`}>
+                    <b>Action: </b>{selected.aiAnalysis.suggestedAction}
+                  </p>
+                </>
+              ) : (
+                <p className={`text-xs italic ${sub}`}>AI triage is processing for this complaint.</p>
               )}
-              <p className={`text-xs leading-relaxed ${dark ? "text-slate-300" : "text-slate-700"}`}>
-                <b>Action: </b>{selected.aiAnalysis.suggestedAction}
-              </p>
             </Card>
 
             {/* Dispatch controls */}

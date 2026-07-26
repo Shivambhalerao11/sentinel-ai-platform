@@ -6,11 +6,11 @@ from app.db.session import get_db
 from app.middleware.auth import require_admin
 from app.repositories.audit_repository import AuditRepository
 
-router = APIRouter(prefix="/audit-logs", tags=["Audit Logs"])
+router = APIRouter(prefix="/audit", tags=["Audit Logs"])
 
 
 @router.get(
-    "",
+    "/logs",
     summary="Get audit logs (admin only)",
     dependencies=[Depends(require_admin)],
 )

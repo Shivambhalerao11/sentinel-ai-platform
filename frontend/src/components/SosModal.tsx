@@ -99,7 +99,7 @@ export const SosModal: React.FC<SosModalProps> = ({ isOpen, onClose, onSosTrigge
               <div className="flex justify-between">
                 <span className="text-slate-400">ESTIMATED RESPONSE:</span>
                 <span className="font-bold text-white">
-                  {sosResult.aiAnalysis.estimatedResponseTime || "1 - 3 Minutes"}
+                  {sosResult.aiAnalysis?.estimatedResponseTime || "1 - 3 Minutes"}
                 </span>
               </div>
             </div>

@@ -16,7 +16,7 @@ from app.schemas.chat import ChatMessageIn, ChatMessageOut
 router = APIRouter(prefix="/chatbot", tags=["Chatbot"])
 
 
-@router.post("", response_model=dict, summary="Send a message to the AI chatbot")
+@router.post("/message", response_model=dict, summary="Send a message to the AI chatbot")
 def send_chat_message(
     payload: ChatMessageIn,
     current_user=Depends(get_optional_user),

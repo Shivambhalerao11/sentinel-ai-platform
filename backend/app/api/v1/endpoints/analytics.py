@@ -6,11 +6,11 @@ from app.db.session import get_db
 from app.middleware.auth import require_police
 from app.services.analytics_service import AnalyticsService
 
-router = APIRouter(tags=["Analytics"])
+router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
 
 @router.get(
-    "/analytics",
+    "",
     summary="Get dashboard analytics summary",
     description="Returns KPIs, trends, district distribution, and officer performance.",
     dependencies=[Depends(require_police)],
@@ -21,7 +21,7 @@ def get_analytics(db: Session = Depends(get_db)) -> dict:
 
 
 @router.get(
-    "/ai-insights",
+    "/insights",
     summary="Get AI-generated crime insights",
     description="Returns hotspot predictions, district risk scores, suspicious patterns.",
     dependencies=[Depends(require_police)],

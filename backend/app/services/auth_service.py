@@ -39,8 +39,8 @@ def _get_client_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
-def _build_token_pair(user: User) -> TokenPair:
-    """Create access + refresh token pair for a user."""
+def _build_token_pair(user: User) -> tuple:
+    """Create access + refresh token pair for a user. Returns (TokenPair, jti, raw_refresh_token)."""
     access_token = create_access_token(
         subject=str(user.id),
         role=user.role,

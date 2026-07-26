@@ -1,6 +1,7 @@
 """
 Analytics service: builds dashboard metrics and AI insights data.
 """
+from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List
 
@@ -216,39 +217,46 @@ class AnalyticsService:
             for c in recent_complaints
         ]
 
-        # District analytics with risk computation
+        # District analytics — simple group-by, no broken cast
         dist_results = (
             self.db.query(
                 Complaint.district,
                 func.count(Complaint.id).label("count"),
-                func.sum(Complaint.is_emergency.cast(type_=func.count(Complaint.id).__class__)).label("emergency_count"),
             )
             .filter(Complaint.is_deleted == False)
             .group_by(Complaint.district)
             .all()
         )
 
-        # Simplified district analysis
+        # Build district risk data using already-loaded recent_complaints
+        # Group by district from the in-memory list for efficiency
+        district_map: dict = defaultdict(list)
+        for c in recent_complaints:
+            district_map[c.district].append(c)
+
         district_data = []
         for row in dist_results:
-            district_complaints = self.db.query(Complaint).filter(
-                Complaint.is_deleted == False,
-                Complaint.district == row[0],
-            ).all()
+            dist_name = row[0]
+            district_complaints = district_map.get(dist_name, [])
 
             if not district_complaints:
-                continue
+                # District has complaints but not in recent 100; still include with counts
+                categories_list: list = []
+                emergency_ratio = 0.0
+                unresolved_ratio = 0.5
+            else:
+                categories_list = [c.crime_category for c in district_complaints]
+                emergency_ratio = sum(1 for c in district_complaints if c.is_emergency) / len(district_complaints)
+                unresolved_ratio = sum(
+                    1 for c in district_complaints
+                    if c.status not in [ComplaintStatus.RESOLVED, ComplaintStatus.REJECTED]
+                ) / len(district_complaints)
 
-            categories = [c.crime_category for c in district_complaints]
-            key_crime = max(set(categories), key=categories.count) if categories else "Other"
-            emergency_ratio = sum(1 for c in district_complaints if c.is_emergency) / len(district_complaints)
-            unresolved_ratio = sum(
-                1 for c in district_complaints if c.status not in [ComplaintStatus.RESOLVED, ComplaintStatus.REJECTED]
-            ) / len(district_complaints)
+            key_crime = max(set(categories_list), key=categories_list.count) if categories_list else "Other"
 
             district_data.append({
-                "district": row[0],
-                "count": len(district_complaints),
+                "district": dist_name,
+                "count": row[1],
                 "key_crime": key_crime,
                 "emergency_ratio": emergency_ratio,
                 "unresolved_ratio": unresolved_ratio,

@@ -2,11 +2,11 @@
 Sentinel AI Crime Intelligence Platform - FastAPI Application Entry Point.
 """
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import AsyncGenerator
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from pathlib import Path
 
 from app.api.v1.router import api_router
 from app.core.config import settings
@@ -24,7 +24,7 @@ logger = get_logger(__name__)
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """
     Application lifespan events.
-    Startup: verify database, run migrations check, seed if needed.
+    Startup: verify database connection.
     Shutdown: clean up resources.
     """
     # ─── Startup ─────────────────────────────────────────────────────────────
@@ -43,7 +43,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             "Ensure PostgreSQL is running and DATABASE_URL is correct."
         )
 
-    # Auto-seed in development
+    # Auto-seed in development only
     if settings.APP_ENV == "development":
         try:
             from app.utils.seed import run_seed
@@ -52,14 +52,17 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             logger.warning("Seed skipped or failed", error=str(e))
 
     # Log AI status
-    from app.ai.gemini_client import gemini_client
-    if gemini_client.is_available:
-        logger.info("Gemini AI client ready", model=settings.GEMINI_MODEL)
-    else:
-        logger.warning(
-            "Gemini AI not available. Set GEMINI_API_KEY for full AI functionality. "
-            "Heuristic fallback is active."
-        )
+    try:
+        from app.ai.gemini_client import gemini_client
+        if gemini_client.is_available:
+            logger.info("Gemini AI client ready", model=settings.GEMINI_MODEL)
+        else:
+            logger.warning(
+                "Gemini AI not available. Set GEMINI_API_KEY for full AI functionality. "
+                "Heuristic fallback is active."
+            )
+    except Exception as e:
+        logger.warning("AI client init failed", error=str(e))
 
     logger.info("Sentinel platform ready to serve requests")
 
@@ -74,55 +77,25 @@ app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
     description=(
-        "Production-grade AI-powered crime intelligence and emergency response platform "
-        "for Indian Police and Ministry of Home Affairs. "
+        "Production-grade AI-powered crime intelligence and emergency response platform. "
         "Implements BNS 2023 compliance, real-time AI triage, and GIS mapping."
     ),
+    # Only expose docs in non-production environments
     docs_url="/docs" if settings.APP_ENV != "production" else None,
     redoc_url="/redoc" if settings.APP_ENV != "production" else None,
     openapi_url="/openapi.json" if settings.APP_ENV != "production" else None,
     lifespan=lifespan,
-    contact={
-        "name": "Ministry of Home Affairs - IT Cell",
-        "email": "it-support@mha.gov.in",
-    },
-    license_info={
-        "name": "Government of India - Restricted",
-        "url": "https://mha.gov.in",
-    },
 )
 
-# ─── Middleware ───────────────────────────────────────────────────────────────
+# ─── Middleware (CORS must be registered before routes) ──────────────────────
 setup_middleware(app)
 
 # ─── Exception Handlers ──────────────────────────────────────────────────────
 register_exception_handlers(app)
 
 # ─── API Routes ──────────────────────────────────────────────────────────────
+# All routes live under /api/v1/* via the router
 app.include_router(api_router)
-
-# ─── Legacy API compatibility routes (match existing frontend api.ts exactly) ─
-# These proxy to the v1 routes for zero frontend changes needed
-from fastapi import APIRouter
-legacy_router = APIRouter()
-
-# The existing frontend calls /api/... - we match them exactly
-from app.api.v1.endpoints import (
-    analytics, audit, complaints, locations, notifications, chatbot, officers
-)
-
-# Mount legacy routes at /api/* to match existing frontend service layer
-app.include_router(complaints.router, prefix="/api")
-app.include_router(locations.router, prefix="/api")
-app.include_router(notifications.router, prefix="/api")
-app.include_router(analytics.router, prefix="/api")
-app.include_router(chatbot.router, prefix="/api")
-app.include_router(audit.router, prefix="/api")
-app.include_router(officers.router, prefix="/api")
-
-# Auth legacy routes at /api/auth/*
-from app.api.v1.endpoints.auth import router as auth_legacy_router
-app.include_router(auth_legacy_router, prefix="/api")
 
 # ─── Static file serving (uploaded media) ────────────────────────────────────
 upload_dir = Path(settings.UPLOAD_DIR)
@@ -133,18 +106,24 @@ app.mount(
     name="uploads",
 )
 
+
 # ─── Health Check ─────────────────────────────────────────────────────────────
 @app.get("/health", tags=["System"], summary="Health check endpoint")
 def health_check() -> dict:
-    """Returns platform health status. Used by Docker and load balancers."""
-    from app.ai.gemini_client import gemini_client
+    """Returns platform health status. Used by Docker, Render, and load balancers."""
     db_ok = check_db_connection()
+    ai_active = False
+    try:
+        from app.ai.gemini_client import gemini_client
+        ai_active = gemini_client.is_available
+    except Exception:
+        pass
     return {
         "status": "healthy" if db_ok else "degraded",
         "version": settings.APP_VERSION,
         "environment": settings.APP_ENV,
         "database": "connected" if db_ok else "disconnected",
-        "ai_engine": "active" if gemini_client.is_available else "heuristic_fallback",
+        "ai_engine": "active" if ai_active else "heuristic_fallback",
         "platform": settings.APP_NAME,
     }
 
@@ -155,7 +134,7 @@ def root() -> dict:
     return {
         "name": settings.APP_NAME,
         "version": settings.APP_VERSION,
-        "docs": "/docs",
+        "docs": "/docs" if settings.APP_ENV != "production" else "disabled",
         "health": "/health",
         "api_v1": "/api/v1",
     }

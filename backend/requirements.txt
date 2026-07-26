@@ -21,20 +21,18 @@ pydantic-settings==2.7.0
 pydantic[email]==2.10.4
 email-validator==2.2.0
 
-# AI & ML
+# AI & ML — lightweight only (torch removed: 2GB+, incompatible with Render free tier)
+# sentence-transformers is disabled; duplicate detection uses heuristic fallback
 google-generativeai==0.8.3
-sentence-transformers==3.3.1
 scikit-learn==1.6.0
 pandas==2.2.3
 numpy==2.2.0
-torch==2.5.1
 
 # HTTP & Async
 httpx==0.28.1
 aiofiles==24.1.0
 
 # File Processing
-python-magic==0.4.27
 Pillow==11.1.0
 
 # Utilities
@@ -48,7 +46,6 @@ phonenumbers==8.13.52
 pytest==8.3.4
 pytest-asyncio==0.24.0
 pytest-cov==6.0.0
-httpx==0.28.1
 factory-boy==3.3.1
 
 # Logging

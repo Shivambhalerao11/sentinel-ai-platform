@@ -22,11 +22,17 @@ class CitizenRegisterRequest(BaseModel):
     @field_validator("phone")
     @classmethod
     def validate_phone(cls, v: str) -> str:
-        # Normalize and validate Indian mobile number
-        cleaned = re.sub(r"[\s\-\(\)]", "", v)
-        if not re.match(r"^(\+91|91|0)?[6-9]\d{9}$", cleaned):
-            raise ValueError("Invalid Indian mobile number format")
-        return cleaned
+        # Normalize: strip spaces, dashes, parentheses
+        cleaned = re.sub(r"[\s\-\(\)]", "", v.strip())
+        # Accept Indian mobile numbers: +91/91/0 prefix optional, then 10 digits starting 6-9
+        if re.match(r"^(\+91|91|0)?[6-9]\d{9}$", cleaned):
+            return cleaned
+        # Also accept any 10+ digit number for international use
+        if re.match(r"^\+?[\d]{10,15}$", cleaned):
+            return cleaned
+        raise ValueError(
+            "Invalid mobile number. Use format: +91 98765 43210 or 9876543210"
+        )
 
     @field_validator("password")
     @classmethod
@@ -70,10 +76,14 @@ class PoliceRegisterRequest(BaseModel):
     @field_validator("phone")
     @classmethod
     def validate_phone(cls, v: str) -> str:
-        cleaned = re.sub(r"[\s\-\(\)]", "", v)
-        if not re.match(r"^(\+91|91|0)?[6-9]\d{9}$", cleaned):
-            raise ValueError("Invalid Indian mobile number format")
-        return cleaned
+        cleaned = re.sub(r"[\s\-\(\)]", "", v.strip())
+        if re.match(r"^(\+91|91|0)?[6-9]\d{9}$", cleaned):
+            return cleaned
+        if re.match(r"^\+?[\d]{10,15}$", cleaned):
+            return cleaned
+        raise ValueError(
+            "Invalid mobile number. Use format: +91 98765 43210 or 9876543210"
+        )
 
     @field_validator("password")
     @classmethod

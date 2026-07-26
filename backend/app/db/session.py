@@ -12,6 +12,11 @@ from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
+print("=" * 80)
+print("DATABASE_URL BEING USED:")
+print(settings.DATABASE_URL)
+print("=" * 80)
+
 # ─── Engine Configuration ────────────────────────────────────────────────────
 engine = create_engine(
     settings.DATABASE_URL,

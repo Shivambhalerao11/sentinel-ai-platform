@@ -22,6 +22,8 @@ interface SidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   onOpenSos: () => void;
+  isMobileOpen?: boolean;
+  onCloseMobile?: () => void;
   themeMode?: "light" | "dark";
   onThemeChange?: (mode: "light" | "dark") => void;
 }
@@ -48,15 +50,18 @@ const CITIZEN_ITEMS: NavItem[] = [
 
 export const Sidebar: React.FC<SidebarProps> = memo(({
   currentRole, activeTab, onTabChange, onOpenSos,
+  isMobileOpen = false, onCloseMobile,
 }) => {
   const { themeMode } = useTheme();
   const dark    = themeMode === "dark";
   const isPolice = currentRole !== "citizen";
   const items   = isPolice ? POLICE_ITEMS : CITIZEN_ITEMS;
 
-  return (
+  const content = (
     <aside
-      className="w-60 shrink-0 flex flex-col h-[calc(100vh-57px)] relative overflow-hidden"
+      className={`w-60 shrink-0 flex flex-col h-[calc(100vh-57px)] relative overflow-hidden ${
+        isMobileOpen ? "block" : "hidden md:flex"
+      }`}
       style={{
         background: dark
           ? "linear-gradient(180deg, #0B1A2F 0%, #07111E 100%)"
@@ -111,9 +116,9 @@ export const Sidebar: React.FC<SidebarProps> = memo(({
           );
 
           return (
-            <button key={item.id} onClick={() => onTabChange(item.id)}
+            <button key={item.id} onClick={() => { onTabChange(item.id); if (onCloseMobile) onCloseMobile(); }}
               className={[
-                "w-full flex items-center justify-between px-3 py-2.5 rounded-xl",
+                "w-full flex items-center justify-between px-3 py-2.5 rounded-xl min-h-[48px]",
                 "text-[11px] font-bold uppercase tracking-wide cursor-pointer",
                 "transition-all duration-200",
                 isActive
@@ -143,8 +148,8 @@ export const Sidebar: React.FC<SidebarProps> = memo(({
       <div className="px-3 pb-4 pt-2 space-y-2"
         style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
         {/* SOS bottom button */}
-        <button onClick={onOpenSos}
-          className="w-full bg-[#DC2626] hover:bg-[#B91C1C] text-white py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-[0_2px_8px_rgba(220,38,38,0.35)]">
+        <button onClick={() => { onOpenSos(); if (onCloseMobile) onCloseMobile(); }}
+          className="w-full bg-[#DC2626] hover:bg-[#B91C1C] text-white py-2.5 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-[0_2px_8px_rgba(220,38,38,0.35)] min-h-[48px]">
           <ShieldAlert className="w-3.5 h-3.5 text-amber-300" />
           <span>RAPID DISPATCH SOS</span>
         </button>
@@ -157,6 +162,22 @@ export const Sidebar: React.FC<SidebarProps> = memo(({
       </div>
     </aside>
   );
+
+  if (isMobileOpen) {
+    return (
+      <div className="md:hidden fixed inset-0 z-50 flex">
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-xs transition-opacity"
+          onClick={onCloseMobile}
+        />
+        <div className="relative z-10 w-60 max-w-[80vw] h-full shadow-2xl">
+          {content}
+        </div>
+      </div>
+    );
+  }
+
+  return content;
 });
 
 Sidebar.displayName = "Sidebar";

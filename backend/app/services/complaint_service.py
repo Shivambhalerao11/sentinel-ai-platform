@@ -616,3 +616,26 @@ class ComplaintService:
             resource_id=complaint_id_str,
         )
         self.db.commit()
+
+    def get_map_locations(
+        self,
+        state: Optional[str] = None,
+        district: Optional[str] = None,
+        category: Optional[str] = None,
+        severity: Optional[str] = None,
+        status: Optional[str] = None,
+        date_from: Optional[str] = None,
+        date_to: Optional[str] = None,
+    ) -> List[dict]:
+        from datetime import datetime
+        df_dt = datetime.fromisoformat(date_from) if date_from else None
+        dt_dt = datetime.fromisoformat(date_to) if date_to else None
+        return self.complaint_repo.get_map_locations(
+            state=state,
+            district=district,
+            category=category,
+            severity=severity,
+            status=status,
+            date_from=df_dt,
+            date_to=dt_dt,
+        )

@@ -337,3 +337,57 @@ class ComplaintRepository:
             )
             .all()
         )
+
+    def get_map_locations(
+        self,
+        state: Optional[str] = None,
+        district: Optional[str] = None,
+        category: Optional[str] = None,
+        severity: Optional[str] = None,
+        status: Optional[str] = None,
+        date_from: Optional[datetime] = None,
+        date_to: Optional[datetime] = None,
+    ) -> List[dict]:
+        query = self.db.query(Complaint).filter(
+            Complaint.is_deleted == False,
+            Complaint.latitude.isnot(None),
+            Complaint.longitude.isnot(None),
+        )
+        if state:
+            query = query.filter(Complaint.district.ilike(f"%{state}%") | Complaint.address.ilike(f"%{state}%"))
+        if district:
+            query = query.filter(Complaint.district.ilike(f"%{district}%"))
+        if category:
+            query = query.filter(Complaint.crime_category.ilike(f"%{category}%"))
+        if severity:
+            query = query.filter(Complaint.priority.ilike(f"%{severity}%"))
+        if status:
+            query = query.filter(Complaint.status.ilike(f"%{status}%"))
+        if date_from:
+            query = query.filter(Complaint.created_at >= date_from)
+        if date_to:
+            query = query.filter(Complaint.created_at <= date_to)
+
+        results = query.order_by(desc(Complaint.created_at)).all()
+        locations = []
+        for c in results:
+            cat_val = c.crime_category.value if hasattr(c.crime_category, "value") else str(c.crime_category)
+            prio_val = c.priority.value if hasattr(c.priority, "value") else str(c.priority)
+            stat_val = c.status.value if hasattr(c.status, "value") else str(c.status)
+            locations.append({
+                "id": str(c.id),
+                "complaint_id": c.complaint_id,
+                "title": c.title,
+                "category": cat_val,
+                "priority": prio_val,
+                "status": stat_val,
+                "latitude": float(c.latitude),
+                "longitude": float(c.longitude),
+                "address": c.address or "",
+                "district": c.district or "",
+                "state": getattr(c, "state", None) or "Delhi",
+                "pincode": c.pin_code or "110001",
+                "created_at": c.created_at.isoformat() if c.created_at else None,
+                "is_emergency": c.is_emergency,
+            })
+        return locations

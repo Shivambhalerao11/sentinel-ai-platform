@@ -81,6 +81,7 @@ class ComplaintCreateRequest(BaseModel):
     longitude: float = Field(..., ge=-180.0, le=180.0)
     address: str = Field(..., min_length=5, max_length=500)
     district: str = Field(..., min_length=2, max_length=100)
+    state: Optional[str] = Field(None, max_length=100)
     pin_code: Optional[str] = Field(None, max_length=10)
     is_anonymous: bool = Field(default=False)
     is_emergency: bool = Field(default=False)
@@ -190,6 +191,7 @@ class ComplaintFilterParams(BaseModel):
     priority: Optional[str] = None
     category: Optional[str] = None
     district: Optional[str] = None
+    state: Optional[str] = None
     officer_id: Optional[str] = None
     is_emergency: Optional[bool] = None
     date_from: Optional[str] = None

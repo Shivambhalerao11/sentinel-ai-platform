@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   ShieldAlert, Search, Bell, Radio, UserCheck,
   CheckCheck, AlertTriangle, User as UserIcon,
-  ChevronDown, LogOut, Volume2, VolumeX, Sun, Moon,
+  ChevronDown, LogOut, Volume2, VolumeX, Sun, Moon, Menu,
 } from "lucide-react";
 import { User, NotificationItem } from "../types";
 import { fetchNotifications, markNotificationRead } from "../services/api";
@@ -15,6 +15,7 @@ interface HeaderProps {
   onLogout?: () => void;
   onSearch: (query: string) => void;
   onOpenSos: () => void;
+  onToggleMobileMenu?: () => void;
   activeTab: string;
   themeMode?: "light" | "dark";
   onThemeChange?: (mode: "light" | "dark") => void;
@@ -22,7 +23,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   currentUser, onRoleSwitch, onLogout, onSearch,
-  onOpenSos,
+  onOpenSos, onToggleMobileMenu,
 }) => {
   const { themeMode, toggleTheme } = useTheme();
   const dark = themeMode === "dark";
@@ -86,6 +87,16 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* ── Brand ─────────────────────────────────────────────────────────── */}
       <div className="flex items-center space-x-3">
+        {/* Mobile Hamburger Drawer Trigger */}
+        <button
+          type="button"
+          onClick={onToggleMobileMenu}
+          className="md:hidden p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 cursor-pointer min-h-[48px] min-w-[48px] flex items-center justify-center transition-colors"
+          title="Open menu"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+
         {/* Heritage motif beside logo */}
         <div className="relative">
           <div className={`p-2 rounded-xl flex items-center justify-center shadow-sm ${dark ? "bg-[#163A70]" : "bg-[#163A70]"}`}>

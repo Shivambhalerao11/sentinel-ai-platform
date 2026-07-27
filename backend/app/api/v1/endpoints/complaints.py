@@ -77,6 +77,33 @@ def create_sos(
 
 
 @router.get(
+    "/complaints/map",
+    summary="Get all complaint map locations across India",
+    description="Returns anonymized complaint coordinates with filtering by state, district, category, severity, status, and date range.",
+)
+def get_complaint_map_locations(
+    state: Optional[str] = Query(None),
+    district: Optional[str] = Query(None),
+    category: Optional[str] = Query(None),
+    severity: Optional[str] = Query(None),
+    status_filter: Optional[str] = Query(None, alias="status"),
+    date_from: Optional[str] = Query(None),
+    date_to: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+) -> list:
+    service = ComplaintService(db)
+    return service.get_map_locations(
+        state=state,
+        district=district,
+        category=category,
+        severity=severity,
+        status=status_filter,
+        date_from=date_from,
+        date_to=date_to,
+    )
+
+
+@router.get(
     "/complaints",
     summary="List and search complaints",
     description="Filtered, paginated complaint list. Citizens see only their own complaints.",

@@ -32,6 +32,7 @@ import {
 import { Complaint, CrimeCategory } from "../types";
 import { submitComplaint, fetchComplaints, sendChatbotMessage } from "../services/api";
 import { Select } from "../design";
+import { CitizenSettings } from "./CitizenSettings";
 
 interface CitizenViewProps {
   activeSubTab: string;
@@ -862,6 +863,19 @@ export const CitizenView: React.FC<CitizenViewProps> = ({
             </button>
           </div>
         </div>
+      )}
+
+      {/* CITIZEN SETTINGS */}
+      {activeSubTab === "settings" && (
+        <CitizenSettings
+          currentUser={{
+            id: "usr-cit-01",
+            full_name: formData.name || "Rahul Kapoor",
+            email: formData.email || "rahul.k@example.com",
+            phone: formData.phone || "+91 98765 43210",
+            role: "citizen",
+          }}
+        />
       )}
     </div>
   );

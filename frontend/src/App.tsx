@@ -11,6 +11,7 @@ import { SettingsAudit } from "./components/SettingsAudit";
 import { SosModal } from "./components/SosModal";
 import CinematicLanding from "./landing/CinematicLanding";
 import { OfficerManagement } from "./components/OfficerManagement";
+import { MobileBottomNav } from "./components/MobileBottomNav";
 import { User, Complaint, PoliceStation, PatrolUnit } from "./types";
 import {
   fetchComplaints,
@@ -45,6 +46,7 @@ export function App() {
   const [patrolUnits, setPatrolUnits] = useState<PatrolUnit[]>([]);
   const [selectedCaseFromDashboard, setSelectedCaseFromDashboard] = useState<Complaint | null>(null);
   const [isSosOpen, setIsSosOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchFilter, setSearchFilter] = useState("");
 
   // Stable across renders — only recreated if setters change (they don't)
@@ -166,6 +168,7 @@ export function App() {
         onLogout={handleLogout}
         onSearch={handleGlobalSearch}
         onOpenSos={handleOpenSos}
+        onToggleMobileMenu={() => setIsMobileMenuOpen(prev => !prev)}
         activeTab={activeTab}
         themeMode={themeMode}
         onThemeChange={handleThemeChange}
@@ -177,6 +180,8 @@ export function App() {
           activeTab={activeTab}
           onTabChange={handleTabChange}
           onOpenSos={handleOpenSos}
+          isMobileOpen={isMobileMenuOpen}
+          onCloseMobile={() => setIsMobileMenuOpen(false)}
           themeMode={themeMode}
           onThemeChange={handleThemeChange}
         />
@@ -317,6 +322,13 @@ export function App() {
         isOpen={isSosOpen}
         onClose={handleCloseSos}
         onSosTriggered={handleSosTriggered}
+      />
+
+      <MobileBottomNav
+        currentRole={currentUser.role}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        onOpenSos={handleOpenSos}
       />
     </div>
   );

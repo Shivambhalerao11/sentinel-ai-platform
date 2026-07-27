@@ -33,8 +33,8 @@ export const Input: React.FC<InputProps> = memo(({
           icon ? "pl-9 pr-3" : "px-3",
           "py-2.5",
           dark
-            ? "input-dark bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.12)] text-white placeholder-[#BFC7D5] focus:border-[#D4AF37] focus:ring-[rgba(212,175,55,0.22)]"
-            : "input-light bg-[#F8FAFC] border border-[#CBD5E1] text-[#0F172A] placeholder-[#64748B] focus:border-[#163A70] focus:ring-[rgba(22,58,112,0.18)] focus:bg-white",
+            ? "input-dark bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.12)] text-white placeholder-[#94A3B8] focus:border-[#D4AF37] focus:ring-[rgba(212,175,55,0.22)]"
+            : "input-light bg-[#F8FAFC] border border-[#CBD5E1] text-[#0F172A] placeholder-[#64748B] focus:border-[#163A70] focus:ring-[rgba(22,58,112,0.18)]",
           error ? "border-red-500! focus:border-red-500! focus:ring-red-200!" : "",
           className,
         ].filter(Boolean).join(" ")}
@@ -115,8 +115,8 @@ export const Textarea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement
         "w-full rounded-xl text-xs font-medium px-3 py-2.5 transition-all duration-200 resize-none ds-input",
         "focus:outline-none focus:ring-2 caret-[#D4AF37] selection:bg-[#163A70] selection:text-white",
         dark
-          ? "input-dark bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.12)] text-white placeholder-[#BFC7D5] focus:border-[#D4AF37] focus:ring-[rgba(212,175,55,0.22)]"
-          : "input-light bg-[#F8FAFC] border border-[#CBD5E1] text-[#0F172A] placeholder-[#64748B] focus:border-[#163A70] focus:ring-[rgba(22,58,112,0.18)] focus:bg-white",
+          ? "input-dark bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.12)] text-white placeholder-[#94A3B8] focus:border-[#D4AF37] focus:ring-[rgba(212,175,55,0.22)]"
+          : "input-light bg-[#F8FAFC] border border-[#CBD5E1] text-[#0F172A] placeholder-[#64748B] focus:border-[#163A70] focus:ring-[rgba(22,58,112,0.18)]",
         className,
       ].filter(Boolean).join(" ")}
     />

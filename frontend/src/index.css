@@ -167,68 +167,89 @@ select.select-dark {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   GLOBAL INPUT TEXT VISIBILITY & CONTRAST SYSTEM
-   Fixes typed text contrast, password bullets visibility, gold caret, placeholder,
-   selection text & background, focus glow and transitions for ALL input elements.
+   GLOBAL INPUT TEXT VISIBILITY, CONTRAST & AUTOFILL SYSTEM
+   Applies to EVERY input, textarea, select, search, password, OTP, and form control.
+   Prevents white-on-white text, black-on-dark text, and browser autofill overrides
+   across Chrome, Edge, Safari, Firefox in both Dark and Light mode contexts.
    ───────────────────────────────────────────────────────────────────────── */
 
+/* Base Input Controls */
 input,
 textarea,
+select,
 .ds-input {
   caret-color: #D4AF37 !important;
   font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease !important;
 }
 
-/* High contrast selection state */
+/* High Contrast Selection State */
 input::selection,
 textarea::selection,
+select::selection,
 .ds-input::selection {
   background-color: #163A70 !important;
   color: #FFFFFF !important;
 }
 
-/* High contrast password characters (bullets/dots) */
+/* High Contrast Password Bullets */
 input[type="password"] {
   letter-spacing: 0.15em !important;
 }
 
-/* Dark theme & dark input styling — typed text pure white (#FFFFFF), caret gold */
+/* ── DARK MODE / DARK CONTEXT INPUT STYLING ── */
 .dark input,
 .dark textarea,
+.dark select,
 input.input-dark,
-textarea.input-dark {
+textarea.input-dark,
+select.input-dark {
   color: #FFFFFF !important;
-  background-color: rgba(255, 255, 255, 0.05) !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
+  background-color: rgba(15, 35, 64, 0.85) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  caret-color: #D4AF37 !important;
 }
 
 .dark input::placeholder,
 .dark textarea::placeholder,
 input.input-dark::placeholder,
 textarea.input-dark::placeholder {
-  color: #BFC7D5 !important;
+  color: #94A3B8 !important;
   opacity: 1 !important;
 }
 
+.dark input:hover,
+.dark textarea:hover,
+.dark select:hover,
+input.input-dark:hover,
+textarea.input-dark:hover {
+  border-color: rgba(212, 175, 55, 0.4) !important;
+}
+
 .dark input:focus,
+.dark input:focus-visible,
 .dark textarea:focus,
+.dark textarea:focus-visible,
+.dark select:focus,
 input.input-dark:focus,
 textarea.input-dark:focus {
   color: #FFFFFF !important;
+  background-color: #0F2340 !important;
   border-color: #D4AF37 !important;
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.22), 0 0 12px rgba(37, 99, 235, 0.25) !important;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.25), 0 4px 16px rgba(0, 0, 0, 0.4) !important;
   outline: none !important;
 }
 
-/* Light theme & light input styling — typed text dark slate (#0F172A), caret gold */
+/* ── LIGHT MODE / LIGHT CONTEXT INPUT STYLING ── */
 html:not(.dark) input:not(.input-dark),
 html:not(.dark) textarea:not(.input-dark),
+html:not(.dark) select:not(.input-dark):not(.ds-select):not(.select-dark),
 input.input-light,
 textarea.input-light {
   color: #0F172A !important;
   background-color: #F8FAFC !important;
   border-color: #CBD5E1 !important;
+  caret-color: #163A70 !important;
 }
 
 html:not(.dark) input:not(.input-dark)::placeholder,
@@ -239,23 +260,84 @@ textarea.input-light::placeholder {
   opacity: 1 !important;
 }
 
+html:not(.dark) input:not(.input-dark):hover,
+html:not(.dark) textarea:not(.input-dark):hover {
+  border-color: #94A3B8 !important;
+}
+
 html:not(.dark) input:not(.input-dark):focus,
+html:not(.dark) input:not(.input-dark):focus-visible,
 html:not(.dark) textarea:not(.input-dark):focus,
+html:not(.dark) textarea:not(.input-dark):focus-visible,
 input.input-light:focus,
 textarea.input-light:focus {
   color: #0F172A !important;
   background-color: #FFFFFF !important;
   border-color: #163A70 !important;
-  box-shadow: 0 0 0 3px rgba(22, 58, 112, 0.18), 0 0 10px rgba(212, 175, 55, 0.15) !important;
+  box-shadow: 0 0 0 3px rgba(22, 58, 112, 0.18), 0 2px 10px rgba(0, 0, 0, 0.08) !important;
   outline: none !important;
 }
 
-/* Disabled input state */
+/* ── AUTOFILL OVERRIDES (Chrome, Edge, Safari, Opera) ── */
+/* Light Mode Autofill */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  -webkit-text-fill-color: #0F172A !important;
+  -webkit-box-shadow: 0 0 0px 1000px #F8FAFC inset !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+  caret-color: #163A70 !important;
+}
+
+/* Dark Mode Autofill Override — Ensures dark box + white text on Chrome/Edge/Safari */
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:active,
+.dark textarea:-webkit-autofill,
+.dark textarea:-webkit-autofill:hover,
+.dark textarea:-webkit-autofill:focus,
+.dark select:-webkit-autofill,
+.dark select:-webkit-autofill:hover,
+.dark select:-webkit-autofill:focus,
+input.input-dark:-webkit-autofill,
+textarea.input-dark:-webkit-autofill,
+select.input-dark:-webkit-autofill {
+  -webkit-text-fill-color: #FFFFFF !important;
+  -webkit-box-shadow: 0 0 0px 1000px #0F2340 inset !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+  caret-color: #D4AF37 !important;
+}
+
+/* ── DISABLED & READONLY STATES ── */
 input:disabled,
-textarea:disabled {
+textarea:disabled,
+select:disabled,
+input[readonly],
+textarea[readonly] {
   opacity: 0.65 !important;
   cursor: not-allowed !important;
+}
+
+.dark input:disabled,
+.dark textarea:disabled,
+.dark select:disabled {
+  color: #64748B !important;
+  background-color: rgba(255, 255, 255, 0.03) !important;
+}
+
+html:not(.dark) input:disabled,
+html:not(.dark) textarea:disabled,
+html:not(.dark) select:disabled {
   color: #94A3B8 !important;
+  background-color: #E2E8F0 !important;
 }
 
 .font-mono-data {

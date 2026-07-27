@@ -93,16 +93,10 @@ class Settings(BaseSettings):
     SENTENCE_TRANSFORMER_MODEL: str = "all-MiniLM-L6-v2"
     DUPLICATE_DETECTION_THRESHOLD: float = 0.82  # cosine similarity threshold
 
-    # ─── Email (OTP/Verification) ────────────────────────────────────────────────
-    RESEND_API_KEY: Optional[str] = None
-    SENDGRID_API_KEY: Optional[str] = None
-    SMTP_HOST: Optional[str] = None
-    SMTP_PORT: int = 587
-    SMTP_USER: Optional[str] = None
-    SMTP_PASSWORD: Optional[str] = None
-    SMTP_FROM_EMAIL: str = "noreply@sentinel.gov.in"
-    SMTP_FROM_NAME: str = "Sentinel Platform"
-    SMTP_USE_TLS: bool = True
+    # ─── Email (Brevo REST API for OTP) ──────────────────────────────────────────
+    BREVO_API_KEY: Optional[str] = None
+    BREVO_SENDER_EMAIL: str = "sentinelsecurityai@gmail.com"
+    BREVO_SENDER_NAME: str = "Sentinel AI Platform"
     EMAIL_VERIFICATION_EXPIRE_HOURS: int = 24
 
     # ─── SMS / OTP ───────────────────────────────────────────────────────────────

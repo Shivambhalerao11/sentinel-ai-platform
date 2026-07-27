@@ -78,46 +78,37 @@ class EmailService:
         if settings.RESEND_API_KEY:
             try:
                 payload = {
-    "from": f"{settings.SMTP_FROM_NAME} <onboarding@resend.dev>",
-    "to": [to_email],
-    "subject": subject,
-    "html": html_content,
-}
+                    "from": f"{settings.SMTP_FROM_NAME} <onboarding@resend.dev>",
+                    "to": [to_email],
+                    "subject": subject,
+                    "html": html_content,
+                }
 
-logger.info(f"Sending Resend payload: {payload}")
+                logger.info(f"Sending Resend payload: {payload}")
 
-req = urllib.request.Request(
-    "https://api.resend.com/emails",
-    data=json.dumps(payload).encode("utf-8"),
-    headers={
-        "Authorization": f"Bearer {settings.RESEND_API_KEY}",
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        "User-Agent": "Mozilla/5.0",
-    },
-    method="POST",
-)   
+                req = urllib.request.Request(
+                    "https://api.resend.com/emails",
+                    data=json.dumps(payload).encode("utf-8"),
+                    headers={
+                        "Authorization": f"Bearer {settings.RESEND_API_KEY}",
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                        "User-Agent": "Mozilla/5.0",
+                    },
+                    method="POST",
+                )
 
                 with urllib.request.urlopen(req, timeout=10) as response:
-                    body = response.read().decode()
-
-                    logger.info(
-                        f"Resend Success ({response.status}): {body}"
-                    )
-
+                    body = response.read().decode("utf-8", errors="ignore")
+                    logger.info(f"Resend Success ({response.status}): {body}")
                     return True
 
             except urllib.error.HTTPError as e:
                 error_body = e.read().decode("utf-8", errors="ignore")
-
-                logger.error(
-                    f"Resend API HTTP {e.code}: {error_body}"
-                )
+                logger.error(f"Resend API HTTP {e.code}: {error_body}")
 
             except Exception as e:
-                logger.exception(
-                    f"Resend API email dispatch failed: {e}"
-                )
+                logger.exception(f"Resend API email dispatch failed: {e}")
 
         # =====================================================
         # 2. SMTP

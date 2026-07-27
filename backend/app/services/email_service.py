@@ -78,21 +78,25 @@ class EmailService:
         if settings.RESEND_API_KEY:
             try:
                 payload = {
-                    "from": f"{settings.SMTP_FROM_NAME} <onboarding@resend.dev>",
-                    "to": [to_email],
-                    "subject": subject,
-                    "html": html_content,
-                }
+    "from": f"{settings.SMTP_FROM_NAME} <onboarding@resend.dev>",
+    "to": [to_email],
+    "subject": subject,
+    "html": html_content,
+}
 
-                req = urllib.request.Request(
-                    "https://api.resend.com/emails",
-                    data=json.dumps(payload).encode("utf-8"),
-                    headers={
-                        "Authorization": f"Bearer {settings.RESEND_API_KEY}",
-                        "Content-Type": "application/json",
-                    },
-                    method="POST",
-                )
+logger.info(f"Sending Resend payload: {payload}")
+
+req = urllib.request.Request(
+    "https://api.resend.com/emails",
+    data=json.dumps(payload).encode("utf-8"),
+    headers={
+        "Authorization": f"Bearer {settings.RESEND_API_KEY}",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "User-Agent": "Mozilla/5.0",
+    },
+    method="POST",
+)   
 
                 with urllib.request.urlopen(req, timeout=10) as response:
                     body = response.read().decode()

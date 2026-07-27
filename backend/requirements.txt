@@ -51,8 +51,10 @@ factory-boy==3.3.1
 # Logging
 structlog==24.4.0
 
-# Rate Limiting
+# Rate Limiting & Cache
 slowapi==0.1.9
+redis==5.2.1
+resend==2.6.0
 
 # CORS & Security Headers
 secure==0.3.0

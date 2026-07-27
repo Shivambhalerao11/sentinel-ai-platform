@@ -126,11 +126,20 @@ def health_check() -> dict:
         ai_active = gemini_client.is_available
     except Exception:
         pass
+    
+    redis_connected = False
+    try:
+        from app.core.redis import redis_client
+        redis_connected = redis_client.is_connected
+    except Exception:
+        pass
+
     return {
         "status": "healthy" if db_ok else "degraded",
         "version": settings.APP_VERSION,
         "environment": settings.APP_ENV,
         "database": "connected" if db_ok else "disconnected",
+        "redis": "connected" if redis_connected else "memory_fallback",
         "ai_engine": "active" if ai_active else "heuristic_fallback",
         "platform": settings.APP_NAME,
     }

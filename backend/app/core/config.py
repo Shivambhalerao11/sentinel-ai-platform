@@ -61,10 +61,14 @@ class Settings(BaseSettings):
     ALLOWED_METHODS: List[str] = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
     ALLOWED_HEADERS: List[str] = ["*"]
 
-    # ─── Rate Limiting ───────────────────────────────────────────────────────────
+    # ─── Rate Limiting & Cache ───────────────────────────────────────────────────
     RATE_LIMIT_PER_MINUTE: int = 60
     RATE_LIMIT_AUTH_PER_MINUTE: int = 10
     RATE_LIMIT_UPLOAD_PER_MINUTE: int = 20
+    REDIS_URL: Optional[str] = "redis://localhost:6379/0"
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+    REDIS_PASSWORD: Optional[str] = None
 
     # ─── File Upload ─────────────────────────────────────────────────────────────
     UPLOAD_DIR: str = "uploads"

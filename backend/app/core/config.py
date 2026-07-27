@@ -102,6 +102,7 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: Optional[str] = None
     SMTP_FROM_EMAIL: str = "noreply@sentinel.gov.in"
     SMTP_FROM_NAME: str = "Sentinel Platform"
+    SMTP_USE_TLS: bool = True
     EMAIL_VERIFICATION_EXPIRE_HOURS: int = 24
 
     # ─── SMS / OTP ───────────────────────────────────────────────────────────────

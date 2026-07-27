@@ -70,8 +70,16 @@ class EmailService:
                     if response.status in (200, 201):
                         logger.info(f"OTP Email sent successfully via Resend API to {to_email}")
                         return True
-            except Exception as e:
-                logger.error(f"Resend API email dispatch failed: {e}")
+            import urllib.error
+
+...
+
+except urllib.error.HTTPError as e:
+    body = e.read().decode("utf-8", errors="ignore")
+    logger.error(f"Resend API HTTP {e.code}: {body}")
+
+except Exception as e:
+    logger.error(f"Resend API email dispatch failed: {e}")
 
         # 2. Try SMTP if configured
         if settings.SMTP_HOST and settings.SMTP_USER and settings.SMTP_PASSWORD:

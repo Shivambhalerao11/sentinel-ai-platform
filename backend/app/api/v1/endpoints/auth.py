@@ -182,7 +182,7 @@ def get_me(
     "/otp/send",
     response_model=SuccessResponse,
     summary="Send 6-digit Email OTP",
-    description="Generates a 6-digit OTP valid for 5 minutes.",
+    description="Generates a 6-digit OTP valid for 5 minutes. Returns debug_otp in non-production.",
 )
 def send_otp(
     payload: SendEmailOtpRequest,
@@ -190,7 +190,13 @@ def send_otp(
     db: Session = Depends(get_db),
 ) -> SuccessResponse:
     from app.middleware.rate_limit import rate_limiter
-    rate_limiter.check_rate_limit(request.client.host if request.client else "unknown", "send_otp", max_requests=5, window_seconds=300)
+
+    # Safely get client IP — handle proxied/no-client scenarios
+    client_ip = (
+        request.headers.get("X-Forwarded-For", "").split(",")[0].strip()
+        or (request.client.host if request.client else "unknown")
+    )
+    rate_limiter.check_rate_limit(client_ip, "send_otp", max_requests=5, window_seconds=300)
 
     service = AuthService(db)
     res = service.send_email_otp(str(payload.email), payload.purpose, request)

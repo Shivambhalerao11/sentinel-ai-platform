@@ -65,7 +65,7 @@ class Settings(BaseSettings):
     RATE_LIMIT_PER_MINUTE: int = 60
     RATE_LIMIT_AUTH_PER_MINUTE: int = 10
     RATE_LIMIT_UPLOAD_PER_MINUTE: int = 20
-    REDIS_URL: Optional[str] = "redis://localhost:6379/0"
+    REDIS_URL: Optional[str] = None          # None = use in-memory fallback (safe for Render free tier)
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     REDIS_PASSWORD: Optional[str] = None

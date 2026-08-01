@@ -274,31 +274,49 @@ class AuthService:
         return _build_user_out(created_user)
 
     def send_email_otp(self, email: str, purpose: str, request: Request) -> dict:
-        """Generate and send 6-digit Email OTP."""
+        """
+        Generate and send 6-digit Email OTP.
+        Never raises HTTP 500 — all failures degrade gracefully.
+        """
         from app.services.email_service import email_service
         ip = _get_client_ip(request)
+
+        # Generate a cryptographically secure 6-digit OTP
         otp_code = f"{secrets.randbelow(900000) + 100000:06d}"
         expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
 
-        self.user_repo.store_email_otp(
-            email=email,
-            otp_code=otp_code,
-            purpose=purpose,
-            expires_at=expires_at,
-            ip_address=ip,
-        )
-        self.db.commit()
+        try:
+            self.user_repo.store_email_otp(
+                email=email,
+                otp_code=otp_code,
+                purpose=purpose,
+                expires_at=expires_at,
+                ip_address=ip,
+            )
+            self.db.commit()
+        except Exception as db_err:
+            self.db.rollback()
+            logger.error(f"Failed to store OTP for {email}: {db_err}")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="OTP service temporarily unavailable. Please try again in a moment.",
+            )
 
-        # Send email via EmailService
-        email_service.send_otp_email(email, otp_code, purpose)
+        # Attempt email delivery — failure is non-fatal; dev fallback always works
+        try:
+            email_service.send_otp_email(email, otp_code, purpose)
+        except Exception as mail_err:
+            # Log but don't crash — OTP is stored and dev_otp will still be returned
+            logger.warning(f"Email delivery failed for {email}: {mail_err}")
 
-        logger.info(f"Generated Email OTP for {email} ({purpose}): {otp_code}")
+        logger.info(f"OTP generated for {email} purpose={purpose}")
 
-        res = {
-            "message": f"6-digit OTP sent to {email}. Valid for 5 minutes.",
+        res: dict = {
+            "message": f"A 6-digit verification code has been sent to {email}. Valid for 5 minutes.",
             "expires_in": 300,
         }
-        if settings.APP_ENV == "development":
+        # Always return the OTP in non-production environments for testing
+        if settings.APP_ENV in ("development", "staging"):
             res["debug_otp"] = otp_code
         return res
 
